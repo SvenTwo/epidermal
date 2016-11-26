@@ -12,3 +12,6 @@ the following order:
     convert_model_to_fcn.py - Convert the trained classification model into a fully convolutional model which gives
                               stomata estimates per pixel
     apply_fcn.py        - Apply a trained FCN to generate stomata predictions on a set of test images
+    webapp.py           - Flask App serving the stomata ID upload and viewing server
+    worker.py           - Worker process that processes unprocessed images from the web app. Should be run while the
+                          webapp runs.

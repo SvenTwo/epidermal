@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata info for {{ filename }}</title>
+    {% if refresh %}
+        <meta http-equiv="refresh" content="5">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ filename }}</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <p class="lead">{{ info_string }}</p>
+            </div>
+            <div class="col-md-3">
+                <form action="/delete/{{ id }}" method=post>
+                    <input type=submit value="Delete">
+                </form>
+            </div>
+        </div>
+
+
+
+
+        <h3>Annotations</h3>
+        {% for annotation in annotations %}
+            <h4>{{ annotation.title }}</h4>
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <p><img src="/static/images/{{ annotation.image_filename }}"  style="width: 600px;" /></p>
+                    </p><a href="/static/images/{{ annotation.image_filename }}">Full size image</a></p>
+                </div>
+                <div class="col-md-3"><p>{{ annotation.info_string }}</p></div>
+            </div>
+        {% endfor %}
+
+      {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}
