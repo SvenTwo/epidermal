@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Dataset {{ dataset_name }}</title>
+{% endblock %}
+
+{% block content %}
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <!--<h1 class="display-3">Stomata Counter</h1>-->
+          <form action="/delete_dataset/{{ dataset_id }}" method=post onsubmit="return confirm('Really delete dataset {{ dataset_name }}?');">
+              <p>Dataset <strong>{{ dataset_name }}</strong>.
+                <input type=submit value="Delete Dataset">
+              </p>
+          </form>
+      </div>
+    </div>
+    <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+            <h2>Upload</h2>
+            <form action="/dataset/{{ dataset_id }}" method=post enctype=multipart/form-data>
+                <p>Select a file to upload. Max size 4096x4096.</p>
+                <p><input type=file name=file><input type=submit value=Upload></p>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <h2>Enqueued</h2>
+            <ul>
+            {% for item in enqueued %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+            <p>Queue status: <emph>{{ status }}</emph></p>
+          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
+       </div>
+        <div class="col-md-4">
+            <h2>Finished</h2>
+            <ul>
+            {% for item in finished %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+            <h2>Errored</h2>
+            <ul>
+            {% for item in errored %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+        </div>
+      </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}

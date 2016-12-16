@@ -8,11 +8,33 @@ client = pymongo.MongoClient()
 epidermal_db = client.epidermal
 
 
+### Datasets ###
+###############
+datasets = epidermal_db['datasets']
+# 'name' (str): Name to identify the dataset
+
+def get_datasets(deleted=False):
+    return [s for s in datasets.find({'deleted': deleted})]
+
+def get_dataset_by_id(dataset_id):
+    return datasets.find_one({'_id': dataset_id})
+
+def get_dataset_by_name(dataset_name, deleted=False):
+    return datasets.find_one({'name': dataset_name, 'deleted': deleted})
+
+def add_dataset(name):
+    dataset_record = { 'name': name, 'deleted': False }
+    dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id
+    return dataset_record
+
+def delete_dataset(dataset_id):
+    datasets.update({'_id': dataset_id}, {"$set": {'deleted': True}}, upsert=False)
 
 ### Samples ###
 ###############
 samples = epidermal_db['samples']
 # 'filename' (str): Filename (without path) of image
+# 'dataset_id' (id): Parent dataset
 # 'processed' (bool): Whether it has been processed by at least one model
 # 'annotated' (bool): Whether it has been annotated by at least one human
 # 'error' (bool): Could not process?
@@ -22,14 +44,18 @@ samples = epidermal_db['samples']
 def get_unprocessed_samples():
     return [s for s in samples.find({'processed': False, 'error': False})]
 
-def get_processed_samples():
-    return [s for s in samples.find({'processed': True, 'error': False})]
+def get_processed_samples(dataset_id=None):
+    query = {'processed': True, 'error': False}
+    if dataset_id is not None: query['dataset_id'] = dataset_id
+    return [s for s in samples.find(query)]
 
-def get_error_samples():
-    return [s for s in samples.find({'error': True})]
+def get_error_samples(dataset_id=None):
+    query = {'error': True}
+    if dataset_id is not None: query['dataset_id'] = dataset_id
+    return [s for s in samples.find(query)]
 
-def add_sample(filename):
-    sample_record = { 'filename': filename, 'size': None, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
+def add_sample(filename, dataset_id=None):
+    sample_record = { 'filename': filename, 'dataset_id': dataset_id, 'size': None, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
     sample_record['_id'] = samples.insert_one(sample_record).inserted_id
     return sample_record
 
@@ -141,3 +167,18 @@ def get_status(component):
 
 def set_status(component, status_string):
     status.update({'component': component}, {"$set": {'component': component, 'status': status_string}}, upsert=True)
+
+
+
+# Test
+if __name__ == '__main__':
+    test_db = get_dataset_by_name('Test')
+    unassigned_samples = samples.find({'dataset_id': None})
+    for s in unassigned_samples:
+        print 'Updating %s...' % (s['filename'])
+        samples.update({'_id': s['_id']}, {"$set": {'dataset_id': test_db['_id']}}, upsert=False)
+    all_datasets = datasets.find()
+    for d in all_datasets:
+        if not 'deleted' in d:
+            print 'Marked dataset %s as not deleted.' % d['name']
+            datasets.update({'_id': d['_id']}, {"$set": {'deleted': False}}, upsert=False)

@@ -29,7 +29,7 @@ def allowed_file(filename):
     _, ext = os.path.splitext(filename)
     return ext.lower() in paths.image_extensions
 
-def upload_file():
+def upload_file(dataset_id):
     # check if the post request has the file part
     if 'file' not in request.files: return error_redirect('No file.')
     file = request.files['file']
@@ -47,7 +47,7 @@ def upload_file():
     # Save it
     file.save(full_fn)
     # Add DB entry (after file save to worker can pick it up immediately)
-    entry = db.add_sample(filename)
+    entry = db.add_sample(filename, dataset_id=dataset_id)
     # Image size
     try:
         image = Image.open(full_fn)
@@ -96,30 +96,73 @@ def show_info(id):
 
 
 # Delete entry
-@app.route('/delete/<id>', methods=['POST'])
-def delete_entry(id):
+@app.route('/delete/<dataset_id>/<id>', methods=['POST'])
+def delete_entry(dataset_id, id):
     # Delete by ID
     if db.delete_sample(ObjectId(id)):
         set_error('Item deleted.')
     else:
         set_error('Item to delete not found.')
-    return redirect('/')
+    return redirect('/dataset/' + dataset_id)
 
 @app.route('/about')
 def about(): return render_template("about.html", error=pop_last_error())
 
 
-# Main overview page
-@app.route('/', methods=['GET', 'POST'])
-def overview():
+# Add dataset
+@app.route('/add_dataset', methods=['POST'])
+def add_dataset():
+    print 'Adding dataset.', request.form
+    # Add by name. Forward to newly created dataset
+    dataset_name = request.form['dataset_name'].strip()
+    if dataset_name == '':
+        set_error('Invalid dataset name.')
+        return redirect('/')
+    print 'Name: %s' % dataset_name
+    dataset_info = db.get_dataset_by_name(dataset_name)
+    print 'Info: %s' % str(dataset_info)
+    if dataset_info is not None:
+        set_error('Duplicate dataset name.')
+        return redirect('/')
+    dataset_info = db.add_dataset(dataset_name)
+    print 'Info: %s' % str(dataset_info)
+    return redirect('/dataset/' + str(dataset_info['_id']))
+
+
+# Delete dataset
+@app.route('/delete_dataset/<dataset_id_str>', methods=['POST'])
+def delete_dataset(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    dataset_info = db.get_dataset_by_id(dataset_id)
+    if dataset_info is None:
+        return render_template("404.html")
+    db.delete_dataset(dataset_id)
+    set_error('Dataset "%s" deleted.' % dataset_info['name'])
+    return redirect('/')
+
+# Main overview page within a dataset
+@app.route('/dataset/<dataset_id_str>', methods=['GET', 'POST'])
+def dataset_info(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    dataset_info = db.get_dataset_by_id(dataset_id)
+    if dataset_info is None:
+        return render_template("404.html")
     if request.method == 'POST':
         # File upload
-        return upload_file()
+        return upload_file(dataset_id)
     enqueued = db.get_unprocessed_samples()
-    finished = db.get_processed_samples()
-    errored = db.get_error_samples()
+    finished = db.get_processed_samples(dataset_id=dataset_id)
+    errored = db.get_error_samples(dataset_id=dataset_id)
     # Get request data
-    return render_template("index.html", enqueued=enqueued, finished=finished, errored=errored, status=get_status(), error=pop_last_error())
+    return render_template("dataset.html", dataset_name=dataset_info['name'], dataset_id=dataset_id_str, enqueued=enqueued, finished=finished, errored=errored, status=get_status(), error=pop_last_error())
+
+
+# List of datasets page
+@app.route('/')
+def overview():
+    datasets = db.get_datasets()
+    enqueued = db.get_unprocessed_samples()
+    return render_template("index.html", datasets=datasets, enqueued=enqueued, status=get_status(), error=pop_last_error())
 
 
 # Start flask app
