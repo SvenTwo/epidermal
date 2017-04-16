@@ -95,14 +95,20 @@ def show_info(id):
 
 
 # Delete entry
-@app.route('/delete/<dataset_id>/<id>', methods=['POST'])
-def delete_entry(dataset_id, id):
+@app.route('/delete/<id>', methods=['POST'])
+def delete_entry(id):
+    # For return path
+    sample = db.get_sample_by_id(ObjectId(id))
+    if sample is None:
+        set_error('Item to delete not found.')
+        return redirect('/')
+    dataset_id = sample['dataset_id']
     # Delete by ID
     if db.delete_sample(ObjectId(id)):
         set_error('Item deleted.')
     else:
-        set_error('Item to delete not found.')
-    return redirect('/dataset/' + dataset_id)
+        set_error('Could not delete item.')
+    return redirect('/dataset/' + str(dataset_id))
 
 @app.route('/about')
 def about(): return render_template("about.html", error=pop_last_error())
