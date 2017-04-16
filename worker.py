@@ -2,7 +2,7 @@
 # Worker process that watches a folder and processes images
 
 import time
-import os, sys
+import os
 from apply_fcn import load_latest_model, process_image_file, plot_heatmap
 import paths
 import db

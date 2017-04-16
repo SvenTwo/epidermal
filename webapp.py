@@ -4,7 +4,6 @@
 import os
 from flask import Flask, render_template, request, redirect
 from werkzeug.utils import secure_filename
-from worker import get_status
 import paths
 import db
 from PIL import Image
@@ -154,7 +153,7 @@ def dataset_info(dataset_id_str):
     finished = db.get_processed_samples(dataset_id=dataset_id)
     errored = db.get_error_samples(dataset_id=dataset_id)
     # Get request data
-    return render_template("dataset.html", dataset_name=dataset_info['name'], dataset_id=dataset_id_str, enqueued=enqueued, finished=finished, errored=errored, status=get_status(), error=pop_last_error())
+    return render_template("dataset.html", dataset_name=dataset_info['name'], dataset_id=dataset_id_str, enqueued=enqueued, finished=finished, errored=errored, status=db.get_status('worker'), error=pop_last_error())
 
 
 # List of datasets page
@@ -162,7 +161,7 @@ def dataset_info(dataset_id_str):
 def overview():
     datasets = db.get_datasets()
     enqueued = db.get_unprocessed_samples()
-    return render_template("index.html", datasets=datasets, enqueued=enqueued, status=get_status(), error=pop_last_error())
+    return render_template("index.html", datasets=datasets, enqueued=enqueued, status=db.get_status('worker'), error=pop_last_error())
 
 
 # Start flask app
