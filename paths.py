@@ -7,7 +7,7 @@ import os
 run_path = '/home/sven2/s2caffe/runs/'
 
 # Storage path for image data (large)
-data_path = '/media/data/epidermal'
+data_path = '/media/data_cifs/sven2/epidermal'
 
 # Storage path for model weights (large)
 model_path = '/home/sven2/caffedata_cifs'
