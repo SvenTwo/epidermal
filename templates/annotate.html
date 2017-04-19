@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata annotation for {{ filename }}</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ filename }}</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <p class="lead">{{ info_string }}</p>
+            </div>
+            <div class="col-md-3">
+                <form action="/save_annotation/{{ id }}" method=post>
+                    <input type=submit value="Save">
+                </form>
+                <form action="/info/{{ id }}" method=get>
+                    <input type=submit value="Cancel">
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <div id="annotation_div" style="height:{{ height }}px; width:{{ width }}px;">
+                    <img src="/static/images/{{ image_filename }}"  style="height:{{ height }}px; width:{{ width }}px; position: absolute;" />
+                    <svg id="annotation_svg" style="height:{{ height }}px; width:{{ width }}px; position: absolute;"/>
+                </div>
+            </div>
+        </div>
+
+      {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <script>var height = {{ height }}, width = {{ width }};</script>
+    <script src="/static/js/annotate.js"></script>
+{% endblock %}

@@ -16,15 +16,15 @@
             <div class="col-md-6">
                 <p class="lead">{{ info_string }}</p>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
+                <form action="/annotate/{{ id }}" method=post>
+                    <input type=submit value="Annotate">
+                </form>
                 <form action="/delete/{{ id }}" method=post>
                     <input type=submit value="Delete">
                 </form>
             </div>
         </div>
-
-
-
 
         <h3>Annotations</h3>
         {% for annotation in annotations %}

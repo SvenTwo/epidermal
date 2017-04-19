@@ -45,8 +45,10 @@ def upload_file(dataset_id):
         i += 1
     # Save it
     file.save(full_fn)
+    # Get some image info
+    im = Image.open(full_fn)
     # Add DB entry (after file save to worker can pick it up immediately)
-    entry = db.add_sample(filename, dataset_id=dataset_id)
+    entry = db.add_sample(filename, size=im.size, dataset_id=dataset_id)
     # Image size
     try:
         image = Image.open(full_fn)
@@ -92,6 +94,23 @@ def show_info(id):
             an['image_filename'] = 'heatmaps/' + ad['heatmap_image_filename']
             annotations += [an]
     return render_template("info.html", id=id, filename=filename, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
+
+
+# Annotation page
+@app.route('/annotate/<id>', methods=['GET', 'POST'])
+def annotate(id):
+    # Query info from DB
+    sample_id = ObjectId(id)
+    sample_entry = db.get_sample_by_id(sample_id)
+    # Unknown entry?
+    if sample_entry is None:
+        return error_redirect('Unknown entry: "%s".' % str(sample_id))
+    # Determine data
+    image_filename = 'images/' + sample_entry['filename']
+    info_string = ''
+    return render_template("annotate.html", id=id, image_filename=image_filename, info_string=info_string, error=pop_last_error(),
+                           height=sample_entry['size'][1], width=sample_entry['size'][0])
+
 
 
 # Delete entry

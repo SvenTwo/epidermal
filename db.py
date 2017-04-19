@@ -3,6 +3,7 @@
 
 import pymongo
 from bson.objectid import ObjectId
+from PIL import Image
 
 client = pymongo.MongoClient()
 epidermal_db = client.epidermal
@@ -54,8 +55,8 @@ def get_error_samples(dataset_id=None):
     if dataset_id is not None: query['dataset_id'] = dataset_id
     return [s for s in samples.find(query)]
 
-def add_sample(filename, dataset_id=None):
-    sample_record = { 'filename': filename, 'dataset_id': dataset_id, 'size': None, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
+def add_sample(filename, size, dataset_id=None):
+    sample_record = { 'filename': filename, 'dataset_id': dataset_id, 'size': size, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
     sample_record['_id'] = samples.insert_one(sample_record).inserted_id
     return sample_record
 
@@ -94,7 +95,7 @@ def add_human_annotation(sample_id, user_id, positions, margin):
 
 ### Machine annotations ###
 ###########################
-machine_annotations = epidermal_db['human_annotations']
+machine_annotations = epidermal_db['machine_annotations']
 # 'sample_id' (id): Link into samples collection
 # 'model_id' (id): Annotating model
 # 'heatmap_filename' (str): Filename of heatmap (numpy)
