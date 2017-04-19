@@ -8,6 +8,7 @@ import paths
 import db
 from PIL import Image
 from bson.objectid import ObjectId
+import json
 
 app = Flask(__name__)
 app.debug = True
@@ -108,9 +109,24 @@ def annotate(id):
     # Determine data
     image_filename = 'images/' + sample_entry['filename']
     info_string = ''
+    annotations = db.get_human_annotations(sample_id)
+    if len(annotations):
+        annotations_json = annotations[0]['positions']
+    else:
+        annotations_json = []
     return render_template("annotate.html", id=id, image_filename=image_filename, info_string=info_string, error=pop_last_error(),
-                           height=sample_entry['size'][1], width=sample_entry['size'][0])
+                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json)
 
+
+# Save annotations
+@app.route('/save_annotations/<id>', methods=['GET', 'POST'])
+def save_annotations(id):
+    # Add by name. Forward to newly created dataset
+    annotations = json.loads(request.form['annotations'].strip())
+    margin = int(request.form['margin'].strip())
+    print 'Saving annotations.', id, margin, annotations
+    db.set_human_annotation(ObjectId(id), db.get_default_user(), annotations, margin)
+    return redirect('/info/' + id)
 
 
 # Delete entry

@@ -1,29 +1,30 @@
 /* Annotation */
 
+var update_display;
+
 var annotation_margin = 32;
 var display_radius = 32;
 var svg = d3.select("#annotation_svg");
 
-var annotations = [];
 var last_stoma_id = 0;
-var update_display;
+var annotations = saved_annotations.map(function(stoma){
+    return { x: stoma.x, y: stoma.y, id: ++last_stoma_id };
+});
 
-Array.prototype.removeIf = function(callback) {
-    var i = this.length;
-    while (i--) {
-        if (callback(this[i], i)) {
-            this.splice(i, 1);
-        }
-    }
-};
-
+// Click on annotation: Remove annotation
 var stomaClick = function() {
+  // Find annotation to remove
   var id = parseInt(this.getAttribute("id").substr(5));
+  // Remove from array
   annotations.removeIf(function(stoma, index) { return stoma.id == id; });
+  // Remove from display
   d3.select(this).remove();
+  // Don't process click event on container
   d3.event.stopPropagation();
 };
 
+
+// Update positions / add missing stomata elements to be drawn
 update_display = function() {
   var circles = svg.selectAll("circle");
   circles.data(annotations).enter().append("circle")
@@ -34,6 +35,7 @@ update_display = function() {
     .attr("id", function(d) { return "stoma" + d.id; })
     .on("mousedown", stomaClick);
 };
+
 
 // Main SVG clicks: Add new stomata
 svg.on("mousedown", function() {
@@ -46,4 +48,20 @@ svg.on("mousedown", function() {
     };
     annotations.push(new_annotation);
     update_display();
+});
+
+// Initial update of loaded annotations
+update_display();
+
+
+// Save annotation
+$(document).ready(function(){
+    $("#save_annotations_form").submit( function(eventObj) {
+        var send_annotations = annotations.map(function(stoma) {
+                return { x: stoma.x, y: stoma.y }
+            });
+        $('#form_annotations').attr('value', JSON.stringify(send_annotations));
+        $('#form_margin').attr('value', ""+annotation_margin);
+        return true;
+    });
 });

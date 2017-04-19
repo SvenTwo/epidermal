@@ -86,11 +86,11 @@ human_annotations = epidermal_db['human_annotations']
 def get_human_annotations(sample_id):
     return [s for s in human_annotations.find({'sample_id': sample_id})]
 
-def add_human_annotation(sample_id, user_id, positions, margin):
+def set_human_annotation(sample_id, user_id, positions, margin):
+    annotation_lookup = { 'sample_id': sample_id }
     annotation_record = { 'sample_id': sample_id, 'user_id': user_id, 'positions': positions, 'margin': margin }
-    annotation_record['_id'] = human_annotations.insert_one(annotation_record).inserted_id
+    human_annotations.update(annotation_lookup, annotation_record, upsert=True)
     samples.update({'_id':sample_id}, {"$set": { 'annotated': True } }, upsert=False)
-    return annotation_record
 
 
 ### Machine annotations ###

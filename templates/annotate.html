@@ -15,11 +15,13 @@
                 <p class="lead">{{ info_string }}</p>
             </div>
             <div class="col-md-3">
-                <form action="/save_annotation/{{ id }}" method=post>
-                    <input type=submit value="Save">
+                <form id="save_annotations_form" action="/save_annotations/{{ id }}" method=post>
+                    <input type="hidden" id="form_annotations" name="annotations" value="">
+                    <input type="hidden" id="form_margin" name="margin" value="0">
+                    <input type="submit" value="Save">
                 </form>
                 <form action="/info/{{ id }}" method=get>
-                    <input type=submit value="Cancel">
+                    <input type="submit" value="Cancel">
                 </form>
             </div>
         </div>
@@ -40,6 +42,6 @@
 
 {% block tailjs %}
     {{ super() }}
-    <script>var height = {{ height }}, width = {{ width }};</script>
+    <script>var height = {{ height }}, width = {{ width }}, saved_annotations = {{ annotations|tojson|safe }};</script>
     <script src="/static/js/annotate.js"></script>
 {% endblock %}
