@@ -3,7 +3,7 @@
 
 import os
 import caffe
-from paths import run_path, data_path
+from config import config
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
 import numpy as np
@@ -21,8 +21,8 @@ def init_model_transformer(net):
     return transformer
 
 def load_model(run_name, iter, model_name, train_name, fc8_suffix, input_size):
-    model_fn = os.path.join(run_path, run_name, 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
-    proto_fn_fcn = os.path.join(run_path, run_name, model_name + 'fcn.prototxt')
+    model_fn = os.path.join(config.run_path, run_name, 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
+    proto_fn_fcn = os.path.join(config.run_path, run_name, model_name + 'fcn.prototxt')
     caffe.set_mode_gpu()
     caffe.set_device(2)
     net = caffe.Net(proto_fn_fcn, caffe.TEST, weights=model_fn)
@@ -106,8 +106,8 @@ def load_latest_model():
     return load_model(run_name, iter, model_name, train_name, fc8_suffix, input_size)
 
 if __name__ == '__main__':
-    image_folder = os.path.join(data_path, 'Pb_09_01_16_No_xy_Archive')
-    heatmap_folder = os.path.join(data_path, 'epi_heatmaps')
+    image_folder = os.path.join(config.data_path, 'Pb_09_01_16_No_xy_Archive')
+    heatmap_folder = os.path.join(config.data_path, 'epi_heatmaps')
     #image_filename = 'VT_DCK_09_R3_B_A1.jpg'
 
     net = load_latest_model()

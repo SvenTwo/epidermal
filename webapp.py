@@ -4,11 +4,11 @@
 import os
 from flask import Flask, render_template, request, redirect
 from werkzeug.utils import secure_filename
-import paths
 import db
 from PIL import Image
 from bson.objectid import ObjectId
 import json
+from config import config
 
 app = Flask(__name__)
 app.debug = True
@@ -27,7 +27,7 @@ def pop_last_error():
 # Upload
 def allowed_file(filename):
     _, ext = os.path.splitext(filename)
-    return ext.lower() in paths.image_extensions
+    return ext.lower() in config.image_extensions
 
 def upload_file(dataset_id):
     # check if the post request has the file part
@@ -40,7 +40,7 @@ def upload_file(dataset_id):
     filename = basename + ext
     i = 1
     while True:
-        full_fn = os.path.join(paths.server_image_path, filename)
+        full_fn = os.path.join(config.server_image_path, filename)
         if not os.path.isfile(full_fn): break
         filename = '%s-%03d%s' % (basename, i, ext)
         i += 1

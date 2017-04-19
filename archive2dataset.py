@@ -2,7 +2,7 @@
 # Generate a training dataset of stoma/non-stoma images from Karl's annotated images
 
 import os
-from paths import data_path
+from config import config
 import csv
 from collections import defaultdict
 import cv2
@@ -145,18 +145,18 @@ def archive2dataset():
     extract_size = (256, 256) # wdt, hgt
     n_angles = 8
     angles = np.linspace(0, 360, num=n_angles, endpoint=False)
-    train_path = os.path.join(data_path, 'Pb_stomata_09_03_16_Archive')
+    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
     positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
     #plot_all_locations(train_path, positions, os.path.join(data_path, 'epi_targets'))
-    output_path = os.path.join(data_path, 'epi1')
+    output_path = os.path.join(config.data_path, 'epi1')
     #generate_image_patches(train_path, positions, output_path, angles, extract_size)
     # Generate dataset text files
-    filelist = generate_filelist(output_path, data_path)
+    filelist = generate_filelist(output_path, config.data_path)
     class_indices = {'distractor': 0, 'target': 1}
     train, val, test = split_train_test(filelist, n_test=100, n_val=100)
-    save_filelist_shuffled(train, class_indices, os.path.join(data_path, 'epi1_train.txt'))
-    save_filelist_shuffled(val, class_indices, os.path.join(data_path, 'epi1_val.txt'))
-    save_filelist_shuffled(test, class_indices, os.path.join(data_path, 'epi1_test.txt'))
+    save_filelist_shuffled(train, class_indices, os.path.join(config.data_path, 'epi1_train.txt'))
+    save_filelist_shuffled(val, class_indices, os.path.join(config.data_path, 'epi1_val.txt'))
+    save_filelist_shuffled(test, class_indices, os.path.join(config.data_path, 'epi1_test.txt'))
 
 if __name__ == '__main__':
     archive2dataset()

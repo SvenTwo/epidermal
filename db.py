@@ -3,11 +3,10 @@
 
 import pymongo
 from bson.objectid import ObjectId
-from PIL import Image
+from config import config
 
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(host=config.db_address, port=config.db_port)
 epidermal_db = client.epidermal
-
 
 ### Datasets ###
 ###############
