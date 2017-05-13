@@ -9,6 +9,7 @@ from PIL import Image
 from bson.objectid import ObjectId
 import json
 from config import config
+from zipfile import ZipFile
 
 app = Flask(__name__)
 app.debug = True
@@ -25,18 +26,27 @@ def pop_last_error():
     return last_error
 
 # Upload
-def allowed_file(filename):
-    _, ext = os.path.splitext(filename)
-    return ext.lower() in config.image_extensions
+
 
 def upload_file(dataset_id):
     # check if the post request has the file part
     if 'file' not in request.files: return error_redirect('No file.')
     file = request.files['file']
     if file.filename == '': return error_redirect('Empty file.')
-    if (not file) or (not allowed_file(file.filename)): return error_redirect('Invalid or disallowed file type.')
+    if (not file): return error_redirect('Invalid file.')
+    # Generate server-side filename
     basename, ext = os.path.splitext(secure_filename(file.filename))
-    # Make unique filename
+    filename = basename + ext
+    # Handle according to type
+    if ext in config.archive_extensions:
+        return upload_archive(dataset_id, file, filename)
+    elif ext in config.image_extensions:
+        return upload_image(dataset_id, file, filename)
+    else:
+        return error_redirect('Invalid or disallowed file type.')
+
+def make_unique_server_image_filename(filename):
+    basename, ext = os.path.splitext(filename)
     filename = basename + ext
     i = 1
     while True:
@@ -44,8 +54,47 @@ def upload_file(dataset_id):
         if not os.path.isfile(full_fn): break
         filename = '%s-%03d%s' % (basename, i, ext)
         i += 1
+    return full_fn
+
+def upload_archive(dataset_id, file, filename):
+    zipf = ZipFile(file.stream, 'r')
+    print 'ZIPF:'
+    for nfo in zipf.infolist():
+        if nfo.file_size > config.max_image_file_size:
+            return error_redirect('One of the images (%s) exceeds the max file size (%d).' % (nfo.filename, config.max_image_file_size))
+    n_added = 0
+    for nfo in zipf.infolist():
+        # Check
+        image_filename = secure_filename(nfo.filename)
+        basename, ext = os.path.splitext(image_filename)
+        if ext not in config.image_extensions:
+            print 'Not an image: %s (%s)' % (ext, image_filename)
+            continue
+        # Extract
+        full_fn = make_unique_server_image_filename(image_filename)
+        file = zipf.open(nfo)
+        with open(full_fn, 'wb') as fid:
+            contents = file.read()
+            fid.write(contents)
+        print 'Written to ', full_fn
+        # Add
+        add_uploaded_image(dataset_id, full_fn, image_filename)
+        n_added += 1
+    set_error('%d images added.' % n_added)
+    return redirect('/dataset/%s' % str(dataset_id))
+
+
+def upload_image(dataset_id, file, filename):
+    # Make unique filename
+    full_fn = make_unique_server_image_filename(filename)
     # Save it
     file.save(full_fn)
+    # Process
+    entry = add_uploaded_image(dataset_id, full_fn, filename)
+    # Redirect to file info
+    return redirect('/info/%s' % str(entry['_id']))
+
+def add_uploaded_image(dataset_id, full_fn, filename):
     # Get some image info
     im = Image.open(full_fn)
     # Add DB entry (after file save to worker can pick it up immediately)
@@ -57,8 +106,8 @@ def upload_file(dataset_id):
     except:
         db.set_sample_error(entry['_id'], 'Error loading image.')
         set_error('Could not load image. Invalid / Upload error?')
-    # Redirect to file info
-    return redirect('/info/%s' % str(entry['_id']))
+    # Return added entry
+    return entry
 
 
 # Entry info page

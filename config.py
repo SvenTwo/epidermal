@@ -26,6 +26,8 @@ class Config:
         self.server_image_path = os.path.join(self.server_path, 'images')
         self.server_heatmap_path = os.path.join(self.server_path, 'heatmaps')
         self.image_extensions = ['.jpg', '.jpeg', '.png']
+        self.archive_extensions = ['.zip']
+        self.max_image_file_size = 1024 * 1024 * 50 # 50MB
 
 
         # Local overloads
