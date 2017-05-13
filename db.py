@@ -84,7 +84,9 @@ human_annotations = epidermal_db['human_annotations']
 
 def get_human_annotations(sample_id):
     def resolve(s):
-        s['user_name'] = get_user_by_id(s['user_id']['name'])
+        user = get_user_by_id(s['user_id'])
+        if user is not None:
+            s['user_name'] = ['name']
         return s
     return [resolve(s) for s in human_annotations.find({'sample_id': sample_id})]
 
@@ -105,7 +107,9 @@ def count_human_annotations():
             sample_id = s['_id']
             print 'Human counted %02d on %s.' % (n, sample_id)
             samples.update({'_id': sample_id}, {"$set": {'human_position_count': n}}, upsert=False)
-
+        else:
+            human = get_human_annotations(s['_id'])
+            print human[0]['positions']
 
 ### Machine annotations ###
 ###########################

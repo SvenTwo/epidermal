@@ -104,16 +104,10 @@ def add_uploaded_image(dataset_id, full_fn, filename):
         im = Image.open(full_fn)
     except:
         print 'Invalid image file: %s' % full_fn
+        set_error('Could not load image. Invalid / Upload error?')
         return None
     # Add DB entry (after file save to worker can pick it up immediately)
-    entry = db.add_sample(filename, size=im.size, dataset_id=dataset_id)
-    # Image size
-    try:
-        image = Image.open(full_fn)
-        db.set_sample_data(entry['_id'], image.size)
-    except:
-        db.set_sample_error(entry['_id'], 'Error loading image.')
-        set_error('Could not load image. Invalid / Upload error?')
+    entry = db.add_sample(os.path.basename(full_fn), size=im.size, dataset_id=dataset_id)
     # Return added entry
     return entry
 

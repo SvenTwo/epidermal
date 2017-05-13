@@ -8,6 +8,10 @@ from collections import defaultdict
 import cv2
 import numpy as np
 from leaves.gen_filelist import split_train_test, save_filelist_shuffled
+import db
+import shutil
+from PIL import Image
+from datetime import strftime
 
 def load_positions(filename):
     # Load position list formatted as rows with
@@ -158,5 +162,41 @@ def archive2dataset():
     save_filelist_shuffled(val, class_indices, os.path.join(config.data_path, 'epi1_val.txt'))
     save_filelist_shuffled(test, class_indices, os.path.join(config.data_path, 'epi1_test.txt'))
 
+def db2dataset():
+    # All human annotations in DB converted to a training set
+    print strftime('%Y%m%d')
+
+def get_karl_dataset_id():
+    name = 'Pb_stomata_09_03_16_Archive'
+    ds = db.get_dataset_by_name(name)
+    if ds is None:
+        ds = db.add_dataset(name)
+    return ds['_id']
+
+def pos2db(p):
+    return { 'x': p[0], 'y': p[1] }
+
+def import_karl_labels():
+    dataset_id = get_karl_dataset_id()
+    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
+    positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
+    for fn, pos in positions.iteritems():
+        pos_db = [pos2db(p) for p in pos]
+        fnj = fn + '.jpg'
+        fn_full = os.path.join(train_path, fnj)
+        im = Image.open(fn_full)
+        filename = os.path.basename(fnj)
+        fn_target = os.path.join(config.server_image_path, filename)
+        shutil.copyfile(fn_full, fn_target)
+        sample = db.add_sample(os.path.basename(fn_target), size=im.size, dataset_id=dataset_id)
+        sample_id = sample['_id']
+        db.set_human_annotation(sample_id, db.get_default_user()['_id'], pos_db, margin=32)
+        print 'http://0.0.0.0:9000/info/%s' % str(sample_id)
+
+    print train_path
+    print positions
+
+
 if __name__ == '__main__':
-    archive2dataset()
+    import_karl_labels()
+    #db2dataset()
