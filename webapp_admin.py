@@ -6,7 +6,7 @@ from functools import wraps
 from flask import render_template, request, Response, Blueprint
 from config import config
 import db
-from retrain_network import is_network_retrain_running, launch_network_retrain, retrain_log_filename
+#from retrain_network import is_network_retrain_running, launch_network_retrain, retrain_log_filename
 import string
 from webapp_base import pop_last_error
 
@@ -47,12 +47,13 @@ def admin_page():
 @admin.route('/admin/retrain', methods=['GET', 'POST'])
 @requires_admin
 def admin_retrain():
-    if request.method == 'POST':
-        if not is_network_retrain_running():
-            launch_network_retrain()
-    if os.path.isfile(retrain_log_filename):
-        log = open(retrain_log_filename, 'rt').read().strip()
-        log = filter(lambda x: x in string.printable, log)
-    else:
-        log = 'No logfile found.'
-    return render_template('admin_retrain.html', log=log, error=pop_last_error())
+#    if request.method == 'POST':
+#        if not is_network_retrain_running():
+#            launch_network_retrain()
+#    if os.path.isfile(retrain_log_filename):
+#        log = open(retrain_log_filename, 'rt').read().strip()
+#        log = filter(lambda x: x in string.printable, log)
+#    else:
+#        log = 'No logfile found.'
+#    return render_template('admin_retrain.html', log=log, error=pop_last_error())
+    return render_template('admin_retrain.html', log='Not implemented', error=pop_last_error())
