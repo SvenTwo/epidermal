@@ -39,10 +39,16 @@
        </div>
         <div class="col-md-4">
             <h2>Finished</h2>
-            <ul>
+            <table class="table table-striped"><thead><tr><td>Image</td><td>Automatic</td><td>Manual</td></tr></thead>
+            <tbody>
             {% for item in finished %}
-                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+                <tr>
+                    <td><a href="/info/{{ item._id }}">{{ item.filename }}</a></td>
+                    <td>{{ item.machine_position_count }}</td>
+                    <td>{{ item.human_position_count }}</td>
+                </tr>
             {% endfor %}
+            </tbody></table>>
             </ul>
             <h2>Errored</h2>
             <ul>

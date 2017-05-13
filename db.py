@@ -93,6 +93,18 @@ def set_human_annotation(sample_id, user_id, positions, margin):
     annotation_record = { 'sample_id': sample_id, 'user_id': user_id, 'positions': positions, 'margin': margin }
     human_annotations.update(annotation_lookup, annotation_record, upsert=True)
     samples.update({'_id':sample_id}, {"$set": { 'annotated': True } }, upsert=False)
+    samples.update({'_id': sample_id}, {"$set": {'human_position_count': len(positions)}}, upsert=False)
+
+# Fix count where it's missing
+def count_human_annotations():
+    for s in samples.find( { 'annotated': True }):
+        if s.get('human_position_count') is None:
+            human = get_human_annotations(s['_id'])
+            n = len(human[0]['positions'])
+            s['human_position_count'] = n
+            sample_id = s['_id']
+            print 'Human counted %02d on %s.' % (n, sample_id)
+            samples.update({'_id': sample_id}, {"$set": {'human_position_count': n}}, upsert=False)
 
 
 ### Machine annotations ###
@@ -111,9 +123,30 @@ def get_machine_annotations(sample_id):
 def add_machine_annotation(sample_id, model_id, heatmap_filename, heatmap_image_filename, positions, margin):
     annotation_record = { 'sample_id': sample_id, 'model_id': model_id, 'heatmap_filename': heatmap_filename, 'heatmap_image_filename': heatmap_image_filename, 'positions': positions, 'margin': margin }
     annotation_record['_id'] = machine_annotations.insert_one(annotation_record).inserted_id
-    samples.update({'_id':sample_id}, {"$set": { 'processed': True } }, upsert=False)
+    samples.update({'_id': sample_id}, {"$set": { 'processed': True } }, upsert=False)
+    samples.update({'_id': sample_id}, {"$set": { 'machine_position_count': len(positions)}}, upsert=False)
     return annotation_record
 
+def update_machine_annotation_positions(sample_id, machine_annotation_id, positions):
+    machine_annotations.update({'_id': machine_annotation_id}, {"$set": {'positions': positions}}, upsert=False)
+    samples.update({'_id': sample_id}, {"$set": {'machine_position_count': len(positions)}}, upsert=False)
+
+def delete_all_machine_annotations():
+    r = machine_annotations.delete_many({})
+    samples.update_many({}, {"$set": {'processed': False}}, upsert=False)
+    print 'Deleted %d machine annotations.' % r.deleted_count
+    return r.deleted_count > 0
+
+# Fix count where it's missing
+def count_machine_annotations():
+    for s in samples.find( { 'processed': True }):
+        if not s.get('machine_position_count'):
+            machine = get_machine_annotations(s['_id'])
+            n = len(machine[0]['positions'])
+            s['machine_position_count'] = n
+            sample_id = s['_id']
+            print 'Machine counted %02d on %s.' % (n, sample_id)
+            samples.update({'_id': sample_id}, {"$set": {'machine_position_count': n}}, upsert=False)
 
 
 ### Users ###
@@ -173,15 +206,29 @@ def set_status(component, status_string):
 
 
 
+
+
+# Helpers
+def print_annotation_table():
+    for s in samples.find({}):
+        if (s.get('human_position_count') is not None) or (s.get('machine_position_count') is not None):
+            print 'Hu: %s    Ma: %s   %s' % (s.get('human_position_count'), s.get('machine_position_count'), s.get('filename'))
+
+
+
 # Test
 if __name__ == '__main__':
-    test_db = get_dataset_by_name('Test')
-    unassigned_samples = samples.find({'dataset_id': None})
-    for s in unassigned_samples:
-        print 'Updating %s...' % (s['filename'])
-        samples.update({'_id': s['_id']}, {"$set": {'dataset_id': test_db['_id']}}, upsert=False)
-    all_datasets = datasets.find()
-    for d in all_datasets:
-        if not 'deleted' in d:
-            print 'Marked dataset %s as not deleted.' % d['name']
-            datasets.update({'_id': d['_id']}, {"$set": {'deleted': False}}, upsert=False)
+    #delete_all_machine_annotations()
+    count_human_annotations()
+    count_machine_annotations()
+    print_annotation_table()
+    #test_db = get_dataset_by_name('Test')
+    #unassigned_samples = samples.find({'dataset_id': None})
+    #for s in unassigned_samples:
+    #    print 'Updating %s...' % (s['filename'])
+    #    samples.update({'_id': s['_id']}, {"$set": {'dataset_id': test_db['_id']}}, upsert=False)
+    #all_datasets = datasets.find()
+    #for d in all_datasets:
+    #    if not 'deleted' in d:
+    #        print 'Marked dataset %s as not deleted.' % d['name']
+    #        datasets.update({'_id': d['_id']}, {"$set": {'deleted': False}}, upsert=False)

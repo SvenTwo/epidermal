@@ -46,7 +46,7 @@ def get_net_margin(net):
 
 def process_image(net, image):
     image_shape = (image.shape[1], image.shape[0])
-    print 'Processing image shaped %s' % str(image.shape)
+    print ('Processing image shaped %s' % str(image.shape)),
     min_size = net.margin * 2 + net.stride * 2
     if image_shape[0] < min_size or image_shape[1] < min_size:
         raise RuntimeError('Image too small (min size %dx%d pixels)' % (min_size, min_size))
@@ -57,6 +57,7 @@ def process_image(net, image):
     net.blobs['data'].data[0, ...] = transformed_image
     output = net.forward()
     probs = output[net.output_name][0]
+    print 'Done.'
     return np.transpose(probs[1,:,:])
 
 def process_image_file(net, image_filename_full, heatmap_filename_full):
