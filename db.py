@@ -83,7 +83,10 @@ human_annotations = epidermal_db['human_annotations']
 # 'margin': Stomata annotation margin [px]
 
 def get_human_annotations(sample_id):
-    return [s for s in human_annotations.find({'sample_id': sample_id})]
+    def resolve(s):
+        s['user_name'] = get_user_by_id(s['user_id']['name'])
+        return s
+    return [resolve(s) for s in human_annotations.find({'sample_id': sample_id})]
 
 def set_human_annotation(sample_id, user_id, positions, margin):
     annotation_lookup = { 'sample_id': sample_id }

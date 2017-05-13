@@ -78,22 +78,33 @@ def show_info(id):
         info_string = 'Error: ' + sample_entry['error_string']
     elif not sample_entry['processed']:
         info_string = 'Processing...'
-        annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
         refresh = True
     else:
         info_string = 'Processed.'
-        annotation_data = db.get_machine_annotations(sample_id)
-        for ad in annotation_data:
-            model_data = db.get_model_by_id(ad['model_id'])
-            an = {}
+    annotation_data = db.get_machine_annotations(sample_id) + db.get_human_annotations(sample_id)
+    has_image_output = False
+    for ad in annotation_data:
+        model_id = ad.get('model_id')
+        an = {}
+        an['info_string'] = ''
+        if model_id is not None:
+            model_data = db.get_model_by_id(model_id)
             if model_data is None:
-                an['info_string'] = '??? Unknown model ???'
+                an['info_string'] += '??? Unknown model ???'
                 an['title'] = 'Unknown'
             else:
                 an['title'] = model_data['name']
-                an['info_string'] = 'Margin: %d' % model_data['margin']
+                an['info_string'] += 'Margin: %d' % model_data['margin']
             an['image_filename'] = 'heatmaps/' + ad['heatmap_image_filename']
-            annotations += [an]
+            has_image_output = True
+        else:
+            an['title'] = 'By user %s' % ad['user_name']
+        positions = ad['positions']
+        if positions is not None:
+            an['info_string'] += ' %d stomata' % len(positions)
+        annotations += [an]
+    if not has_image_output:
+        annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
     return render_template("info.html", id=id, filename=filename, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
 
 

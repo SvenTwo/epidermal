@@ -28,15 +28,17 @@
 
         <h3>Annotations</h3>
         {% for annotation in annotations %}
-            <h4>{{ annotation.title }}</h4>
-            <div class="row">
-                <div class="col-md-3"></div>
-                <div class="col-md-6">
-                    <p><img src="/static/images/{{ annotation.image_filename }}"  style="width: 600px;" /></p>
-                    </p><a href="/static/images/{{ annotation.image_filename }}">Full size image</a></p>
+            <p><strong>{{ annotation.title }}:</strong> {{ annotation.info_string }}</p>
+            {% if annotation.image_filename %}
+                <div class="row">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <p><img src="/static/images/{{ annotation.image_filename }}"  style="width: 600px;" /></p>
+                        </p><a href="/static/images/{{ annotation.image_filename }}">Full size image</a></p>
+                    </div>
+                    <div class="col-md-3"></div>
                 </div>
-                <div class="col-md-3"><p>{{ annotation.info_string }}</p></div>
-            </div>
+            {% endif %}
         {% endfor %}
 
       {{ super() }}
