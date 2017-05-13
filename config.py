@@ -13,14 +13,14 @@ class Config:
         self.db_address = 'localhost'
         self.db_port = 27017
 
-        # Storage path for model definitions (small)
-        self.run_path = '/home/sven2/s2caffe/runs/'
-
         # Storage path for image data (large)
         self.data_path = '/media/data_cifs/sven2/epidermal'
 
         # Storage for patches when retraining
         self.train_data_path = '/media/data/epidermal'
+        self.caffe_path = '/home/sven2/s2caffe/build'
+        self.caffe_train_baseweights = '/home/sven2/caffedata/bvlc_reference_caffenet.caffemodel'
+        self.caffe_train_options = '--gpu 0'
 
         # Storage path for model weights (large)
         self.model_path = '/home/sven2/caffedata_cifs'
@@ -31,6 +31,9 @@ class Config:
         self.image_extensions = ['.jpg', '.jpeg', '.png']
         self.archive_extensions = ['.zip']
         self.max_image_file_size = 1024 * 1024 * 50 # 50MB
+
+        # Local source root
+        self.src_path = os.path.dirname(__file__)
 
 
         # Local overloads

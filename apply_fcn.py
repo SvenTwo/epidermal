@@ -20,9 +20,9 @@ def init_model_transformer(net):
     net.transformer = transformer
     return transformer
 
-def load_model(run_name, iter, model_name, train_name, fc8_suffix, input_size):
-    model_fn = os.path.join(config.run_path, run_name, 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
-    proto_fn_fcn = os.path.join(config.run_path, run_name, model_name + 'fcn.prototxt')
+def load_model(iter, model_name, train_name, fc8_suffix, input_size):
+    model_fn = os.path.join(config.src_path, 'cnn', 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
+    proto_fn_fcn = os.path.join(config.src_path, 'cnn', model_name + 'fcn.prototxt')
     caffe.set_mode_gpu()
     caffe.set_device(2)
     net = caffe.Net(proto_fn_fcn, caffe.TEST, weights=model_fn)
@@ -30,7 +30,7 @@ def load_model(run_name, iter, model_name, train_name, fc8_suffix, input_size):
     net.input_size = input_size[:2]
     init_model_transformer(net)
     net.output_name = 'fc8' + fc8_suffix + '-conv'
-    net.name = '%s_%s_%d' % (run_name, train_name, iter)
+    net.name = '%s_%d' % (train_name, iter)
     net.margin = get_net_margin(net)
     net.stride = 32
     print 'Loaded net %s (margin %d)' % (net.name, net.margin)
@@ -98,13 +98,12 @@ def plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filen
     #plt.show()
 
 def load_latest_model():
-    run_name = 'epi1'
-    iter = 2000
+    iter = 5000
     model_name = 'alexnet'
     train_name = 'alexnetftc'
     fc8_suffix = 'stoma'
     input_size = (2048, 2048)
-    return load_model(run_name, iter, model_name, train_name, fc8_suffix, input_size)
+    return load_model(iter, model_name, train_name, fc8_suffix, input_size)
 
 if __name__ == '__main__':
     image_folder = os.path.join(config.data_path, 'Pb_09_01_16_No_xy_Archive')

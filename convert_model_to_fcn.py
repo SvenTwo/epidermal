@@ -8,11 +8,12 @@ import os
 import numpy as np
 from config import config
 
-def convert_fcn(run_name, iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale):
-    os.chdir(os.path.join(config.run_path, run_name))
-    model_fn = os.path.join(config.run_path, run_name, 'out', train_name + '_iter_' + str(iter) + '.caffemodel')
-    proto_fn_orig = os.path.join(config.run_path, run_name, model_name + '.prototxt')
-    proto_fn_fcn = os.path.join(config.run_path, run_name, model_name + 'fcn.prototxt')
+def convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale):
+    cnn_path = os.path.join(config.src_path, 'cnn')
+    os.chdir(cnn_path)
+    model_fn = os.path.join(cnn_path, 'out', train_name + '_iter_' + str(iter) + '.caffemodel')
+    proto_fn_orig = os.path.join(cnn_path, model_name + '.prototxt')
+    proto_fn_fcn = os.path.join(cnn_path, model_name + 'fcn.prototxt')
 
     # Load the original network and extract the fully connected layers' parameters.
     net = caffe.Net(proto_fn_orig, caffe.TEST, weights=model_fn)
@@ -43,19 +44,18 @@ def convert_fcn(run_name, iter, model_name, train_name, fc_suffix, fc8_suffix, f
         net_full_conv.params['conv1g'][0].data[...] = np.sum(conv1_weight, axis=1, keepdims=True)
         net_full_conv.params['conv1g'][1].data[...] = conv1_bias
 
-    out_fn = os.path.join(config.run_path, run_name, 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
+    out_fn = os.path.join(cnn_path, 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
     print 'saving to ', out_fn
     net_full_conv.save(out_fn)
 
 def convert_epi1():
-    run_name = 'epi1'
-    iter = 2000
+    iter = 5000
     model_name = 'alexnet'
     train_name = 'alexnetftc'
     fc_suffix = ''
     fc8_suffix = 'stoma'
     flatten_grayscale = False
-    convert_fcn(run_name, iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale)
+    convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale)
 
 if __name__ == '__main__':
     convert_epi1()

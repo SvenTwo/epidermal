@@ -92,3 +92,5 @@ ENV/
 data/
 .idea
 static/images
+out/
+*_lmdb

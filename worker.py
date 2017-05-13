@@ -8,6 +8,8 @@ from config import config
 import db
 from stoma_counter import compute_stomata_positions
 import matplotlib.pyplot as plt
+import sys
+import subprocess
 
 def set_status(status_string): db.set_status('worker', status_string)
 def get_status(): return db.get_status('worker')
@@ -48,6 +50,18 @@ def process_images(net, model_id):
         except Exception, e:
             db.set_sample_error(sample['_id'], "Processing error:\n" +str(e))
 
+EXITCODE_RESTART = 55
+restart_signal_filename = os.path.join(config.src_path, 'restart_worker.signal')
+
+def has_restart_signal():
+    if os.path.exists(restart_signal_filename):
+        os.remove(restart_signal_filename)
+        return True
+    return False
+
+def send_restart_signal():
+    subprocess.call(['touch', restart_signal_filename])
+
 def worker_process():
     # Infinite worker process
     try:
@@ -55,11 +69,24 @@ def worker_process():
         net = load_latest_model()
         model_id = db.get_or_add_model(net.name, net.margin)['_id']
         while True:
+            # Restart signal?
+            if has_restart_signal():
+                return True
             process_images(net, model_id)
             set_status('Waiting for images...')
             time.sleep(1)
+
     finally:
         set_status('offline')
+    return False # Not reached
 
 if __name__ == '__main__':
-    worker_process()
+    # Run self as subprocess to allow restarting
+    if len(sys.argv) > 1 and sys.argv[1] == 'proc':
+        if worker_process():
+            sys.exit(EXITCODE_RESTART)
+    else:
+        rval = EXITCODE_RESTART
+        while rval == EXITCODE_RESTART:
+            rval = subprocess.call([sys.argv[0], 'proc'])
+        print 'Worker exited with code ', rval

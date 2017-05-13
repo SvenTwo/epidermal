@@ -122,7 +122,7 @@ def generate_filelist_from_folder(filelists, path, img_root, category=None):
             else:
                 print 'Skipping subfolder %s' % full_fn
             continue
-        if os.stat(full_fn).st_size <= 10240:
+        if os.stat(full_fn).st_size <= 1000:
             print 'Skipping %s: Too small.' % full_fn
             continue
         extension = full_fn.split('.')[-1].lower()
@@ -191,8 +191,7 @@ def db2patches(output_path):
     print '%d patches extracted.' % n
 
 def patches2filelist(output_path):
-    db2patches(output_path)
-    filelist = generate_filelist(output_path, config.data_path)
+    filelist = generate_filelist(output_path, output_path)
     class_indices = {'distractor': 0, 'target': 1}
     train, val, test = split_train_test(filelist, n_test=100, n_val=100)
     save_filelist_shuffled(train, class_indices, os.path.join(output_path, 'train.txt'))
