@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 data_export = Blueprint('data_export', __name__, template_folder='templates')
 
 def export_generator(samples):
-    yield 'Name,Status,Automatic_count,Manual_count\n'
+    yield 'Name,Status,Manual_count,Automatic_count\n'
     for s in samples:
         if s['error']:
             status = 'ERROR'
