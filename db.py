@@ -41,23 +41,25 @@ samples = epidermal_db['samples']
 # 'error_string' (str): Error string if there was a problem with the sample
 # 'size': array[2]: Image size [px]
 
-def get_unprocessed_samples():
-    return [s for s in samples.find({'processed': False, 'error': False})]
+def get_unprocessed_samples(dataset_id=None):
+    query = {'processed': False, 'error': False}
+    if dataset_id is not None: query['dataset_id'] = dataset_id
+    return list(samples.find(query))
 
 def get_processed_samples(dataset_id=None):
     query = {'processed': True, 'error': False}
     if dataset_id is not None: query['dataset_id'] = dataset_id
-    return [s for s in samples.find(query)]
+    return list(samples.find(query))
 
 def get_human_annotated_samples(dataset_id=None):
     query = {'annotated': True }
     if dataset_id is not None: query['dataset_id'] = dataset_id
-    return [s for s in samples.find(query)]
+    return list(samples.find(query))
 
 def get_error_samples(dataset_id=None):
     query = {'error': True}
     if dataset_id is not None: query['dataset_id'] = dataset_id
-    return [s for s in samples.find(query)]
+    return list(samples.find(query))
 
 def add_sample(name, filename, size, dataset_id=None):
     sample_record = { 'name': name, 'filename': filename, 'dataset_id': dataset_id, 'size': size, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }

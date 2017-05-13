@@ -11,10 +11,12 @@ import json
 from config import config
 from zipfile import ZipFile
 from webapp_admin import admin
+from webapp_export import data_export
 
 app = Flask(__name__)
 app.debug = True
 app.register_blueprint(admin)
+app.register_blueprint(data_export)
 
 # Error handling
 app.epi_last_error = None
@@ -261,7 +263,7 @@ def dataset_info(dataset_id_str):
     if request.method == 'POST':
         # File upload
         return upload_file(dataset_id)
-    enqueued = db.get_unprocessed_samples()
+    enqueued = db.get_unprocessed_samples(dataset_id=dataset_id)
     finished = db.get_processed_samples(dataset_id=dataset_id)
     errored = db.get_error_samples(dataset_id=dataset_id)
     # Get request data

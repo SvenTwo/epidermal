@@ -11,9 +11,9 @@
       <div class="container">
         <!--<h1 class="display-3">Stomata Counter</h1>-->
           <form action="/delete_dataset/{{ dataset_id }}" method=post onsubmit="return confirm('Really delete dataset {{ dataset_name }}?');">
-              <p>Dataset <strong>{{ dataset_name }}</strong>.
-                <input type=submit value="Delete Dataset">
-              </p>
+              <p>Dataset <strong>{{ dataset_name }}</strong>.</p>
+              <p><a href="/dataset/{{ dataset_id }}/export">Export results as csv</a></p>
+              <p><input type=submit value="Delete Dataset"></p>
           </form>
       </div>
     </div>
@@ -21,7 +21,7 @@
       <!-- Example row of columns -->
       <div class="row">
         <div class="col-md-4">
-            <h2>Upload</h2>
+            <h2>Add file(s)</h2>
             <form action="/dataset/{{ dataset_id }}" method=post enctype=multipart/form-data>
                 <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
                 <p><input type=file name=file><input type=submit value=Upload></p>
