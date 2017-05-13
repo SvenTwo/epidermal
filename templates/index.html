@@ -14,30 +14,13 @@
       </div>
     </div>
     <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
         <div class="col-md-4">
-            <h2>Datasets</h2>
-            <ul>
-            {% for item in datasets %}
-                <li><a href="/dataset/{{ item._id }}">{{ item.name }}</a></li>
-            {% endfor %}
-            </ul>
-            <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
-            <a href="javascript:addDataset()">Add dataset...</a>
-       </div>
-        <div class="col-md-4">
-            <h2>Enqueued</h2>
-            <ul>
-            {% for item in enqueued %}
-                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
-            {% endfor %}
-            </ul>
-            <p>Queue status: <emph>{{ status }}</emph></p>
-          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
-       </div>
-      </div>
-
+            <h2>Upload</h2>
+            <form action="/dataset/new" method=post enctype=multipart/form-data>
+                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
+                <p><input type=file name=file><input type=submit value=Upload></p>
+            </form>
+        </div>
         {{ super() }}
     </div> <!-- /container -->
 {% endblock %}

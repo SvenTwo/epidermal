@@ -8,6 +8,7 @@ from config import config
 import db
 from retrain_network import is_network_retrain_running, launch_network_retrain, retrain_log_filename
 import string
+from webapp_base import pop_last_error
 
 admin = Blueprint('admin', __name__, template_folder='templates')
 
@@ -38,7 +39,10 @@ def requires_admin(f):
 def admin_page():
     num_images = db.get_sample_count()
     num_human_annotations = db.get_human_annotation_count()
-    return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations)
+    datasets = db.get_datasets()
+    enqueued = db.get_unprocessed_samples()
+    return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations,
+                           datasets=datasets, enqueued=enqueued, status=db.get_status('worker'), error=pop_last_error())
 
 @admin.route('/admin/retrain', methods=['GET', 'POST'])
 @requires_admin
@@ -51,4 +55,4 @@ def admin_retrain():
         log = filter(lambda x: x in string.printable, log)
     else:
         log = 'No logfile found.'
-    return render_template('admin_retrain.html', log=log)
+    return render_template('admin_retrain.html', log=log, error=pop_last_error())

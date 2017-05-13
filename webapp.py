@@ -37,6 +37,9 @@ def upload_file(dataset_id):
     # Generate server-side filename
     basename, ext = os.path.splitext(secure_filename(file.filename))
     filename = basename + ext
+    # Generate dataset if needed
+    if dataset_id is None:
+        dataset_id = db.add_dataset(name=filename)['_id']
     # Handle according to type
     if ext in config.archive_extensions:
         return upload_archive(dataset_id, file, filename)
@@ -96,7 +99,8 @@ def upload_image(dataset_id, file, filename):
     # Process
     entry = add_uploaded_image(dataset_id, full_fn, filename)
     # Redirect to file info
-    return redirect('/info/%s' % str(entry['_id']))
+    #return redirect('/info/%s' % str(entry['_id']))
+    return redirect('/dataset/%s' % str(dataset_id))
 
 def add_uploaded_image(dataset_id, full_fn, filename):
     # Get some image info
@@ -246,10 +250,13 @@ def delete_dataset(dataset_id_str):
 # Main overview page within a dataset
 @app.route('/dataset/<dataset_id_str>', methods=['GET', 'POST'])
 def dataset_info(dataset_id_str):
-    dataset_id = ObjectId(dataset_id_str)
-    dataset_info = db.get_dataset_by_id(dataset_id)
-    if dataset_info is None:
-        return render_template("404.html")
+    if dataset_id_str == 'new' and request.method == 'POST':
+        dataset_id = None
+    else:
+        dataset_id = ObjectId(dataset_id_str)
+        dataset_info = db.get_dataset_by_id(dataset_id)
+        if dataset_info is None:
+            return render_template("404.html")
     if request.method == 'POST':
         # File upload
         return upload_file(dataset_id)
@@ -269,4 +276,4 @@ def overview():
 
 
 # Start flask app
-app.run(host='0.0.0.0', port=9000)
+app.run(host='0.0.0.0', port=9001)

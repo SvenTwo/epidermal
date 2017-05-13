@@ -23,7 +23,7 @@
         <div class="col-md-4">
             <h2>Upload</h2>
             <form action="/dataset/{{ dataset_id }}" method=post enctype=multipart/form-data>
-                <p>Select a file to upload. Max size 4096x4096.</p>
+                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
                 <p><input type=file name=file><input type=submit value=Upload></p>
             </form>
         </div>

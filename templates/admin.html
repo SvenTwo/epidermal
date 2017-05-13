@@ -16,9 +16,33 @@
         <p>Admin page.</p>
         <p><strong>Images:</strong> {{ num_images }}</p>
         <p><strong>Human annotations:</strong> {{ num_human_annotations }}</p>
-        <form action="/admin/retrain" method=post>
+        <!--<form action="/admin/retrain" method=post>
             <p><input type=submit value=Retrain></p>
-        </form>
+        </form>-->
+
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+            <h2>Datasets</h2>
+            <ul>
+            {% for item in datasets %}
+                <li><a href="/dataset/{{ item._id }}">{{ item.name }}</a></li>
+            {% endfor %}
+            </ul>
+            <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
+            <a href="javascript:addDataset()">Add dataset...</a>
+       </div>
+        <div class="col-md-4">
+            <h2>Enqueued</h2>
+            <ul>
+            {% for item in enqueued %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+            <p>Queue status: <emph>{{ status }}</emph></p>
+          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
+       </div>
+      </div>
 
         {{ super() }}
     </div> <!-- /container -->
