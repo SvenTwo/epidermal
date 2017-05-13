@@ -19,6 +19,9 @@ class Config:
         # Storage path for image data (large)
         self.data_path = '/media/data_cifs/sven2/epidermal'
 
+        # Storage for patches when retraining
+        self.train_data_path = '/media/data/epidermal'
+
         # Storage path for model weights (large)
         self.model_path = '/home/sven2/caffedata_cifs'
 

@@ -49,6 +49,11 @@ def get_processed_samples(dataset_id=None):
     if dataset_id is not None: query['dataset_id'] = dataset_id
     return [s for s in samples.find(query)]
 
+def get_human_annotated_samples(dataset_id=None):
+    query = {'annotated': True }
+    if dataset_id is not None: query['dataset_id'] = dataset_id
+    return [s for s in samples.find(query)]
+
 def get_error_samples(dataset_id=None):
     query = {'error': True}
     if dataset_id is not None: query['dataset_id'] = dataset_id
