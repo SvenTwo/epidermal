@@ -129,6 +129,7 @@ def show_info(id):
     refresh = False
     filename = sample_entry['filename']
     name = sample_entry['name']
+    dataset_id = str(sample_entry['dataset_id'])
     annotations = []
     if sample_entry['error']:
         info_string = 'Error: ' + sample_entry['error_string']
@@ -161,7 +162,7 @@ def show_info(id):
         annotations += [an]
     if not has_image_output:
         annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
-    return render_template("info.html", id=id, name=name, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
+    return render_template("info.html", id=id, name=name, dataset_id=dataset_id, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
 
 
 # Annotation page
