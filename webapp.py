@@ -10,9 +10,11 @@ from bson.objectid import ObjectId
 import json
 from config import config
 from zipfile import ZipFile
+from webapp_admin import admin
 
 app = Flask(__name__)
 app.debug = True
+app.register_blueprint(admin)
 
 # Error handling
 app.epi_last_error = None
@@ -26,8 +28,6 @@ def pop_last_error():
     return last_error
 
 # Upload
-
-
 def upload_file(dataset_id):
     # check if the post request has the file part
     if 'file' not in request.files: return error_redirect('No file.')
@@ -107,7 +107,7 @@ def add_uploaded_image(dataset_id, full_fn, filename):
         set_error('Could not load image. Invalid / Upload error?')
         return None
     # Add DB entry (after file save to worker can pick it up immediately)
-    entry = db.add_sample(os.path.basename(full_fn), size=im.size, dataset_id=dataset_id)
+    entry = db.add_sample(name=filename, filename=os.path.basename(full_fn), size=im.size, dataset_id=dataset_id)
     # Return added entry
     return entry
 
@@ -124,6 +124,7 @@ def show_info(id):
     # Determine data
     refresh = False
     filename = sample_entry['filename']
+    name = sample_entry['name']
     annotations = []
     if sample_entry['error']:
         info_string = 'Error: ' + sample_entry['error_string']
@@ -156,7 +157,7 @@ def show_info(id):
         annotations += [an]
     if not has_image_output:
         annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
-    return render_template("info.html", id=id, filename=filename, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
+    return render_template("info.html", id=id, name=name, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
 
 
 # Annotation page

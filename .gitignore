@@ -94,3 +94,5 @@ data/
 static/images
 out/
 *_lmdb
+retrain.log
+*.signal

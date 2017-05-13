@@ -59,8 +59,8 @@ def get_error_samples(dataset_id=None):
     if dataset_id is not None: query['dataset_id'] = dataset_id
     return [s for s in samples.find(query)]
 
-def add_sample(filename, size, dataset_id=None):
-    sample_record = { 'filename': filename, 'dataset_id': dataset_id, 'size': size, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
+def add_sample(name, filename, size, dataset_id=None):
+    sample_record = { 'name': name, 'filename': filename, 'dataset_id': dataset_id, 'size': size, 'processed': False, 'annotated': False, 'error': False, 'error_string': None }
     sample_record['_id'] = samples.insert_one(sample_record).inserted_id
     return sample_record
 
@@ -78,6 +78,15 @@ def delete_sample(sample_id):
     r = samples.delete_one({'_id': sample_id})
     return (r.deleted_count == 1)
 
+def get_sample_count():
+    return samples.count()
+
+def fix_default_sample_names():
+    # Set name=filename for all samples without name
+    for s in samples.find({}):
+        if s.get('name') is None:
+            print 'Naming %s' % s['filename']
+            samples.update({'_id': s['_id']}, {"$set": {'name': s['filename']}}, upsert=False)
 
 ### Human annotations ###
 #########################
@@ -102,6 +111,9 @@ def set_human_annotation(sample_id, user_id, positions, margin):
     samples.update({'_id':sample_id}, {"$set": { 'annotated': True } }, upsert=False)
     samples.update({'_id': sample_id}, {"$set": {'human_position_count': len(positions)}}, upsert=False)
 
+def get_human_annotation_count():
+    return human_annotations.count()
+
 # Fix count where it's missing
 def count_human_annotations():
     for s in samples.find( { 'annotated': True }):
@@ -112,9 +124,6 @@ def count_human_annotations():
             sample_id = s['_id']
             print 'Human counted %02d on %s.' % (n, sample_id)
             samples.update({'_id': sample_id}, {"$set": {'human_position_count': n}}, upsert=False)
-        else:
-            human = get_human_annotations(s['_id'])
-            print human[0]['positions']
 
 ### Machine annotations ###
 ###########################
@@ -227,10 +236,11 @@ def print_annotation_table():
 
 # Test
 if __name__ == '__main__':
-    #delete_all_machine_annotations()
+    delete_all_machine_annotations()
     count_human_annotations()
     count_machine_annotations()
-    print_annotation_table()
+    #print_annotation_table()
+    fix_default_sample_names()
     #test_db = get_dataset_by_name('Test')
     #unassigned_samples = samples.find({'dataset_id': None})
     #for s in unassigned_samples:

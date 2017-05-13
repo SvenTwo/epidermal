@@ -13,6 +13,10 @@ class Config:
         self.db_address = 'localhost'
         self.db_port = 27017
 
+        # Admin page
+        self.admin_username = 'admin'
+        self.admin_password = 'password'
+
         # Storage path for image data (large)
         self.data_path = '/media/data_cifs/sven2/epidermal'
 

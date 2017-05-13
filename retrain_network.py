@@ -50,8 +50,22 @@ def retrain(output_path=None):
     if subprocess.call(cmd):
         raise RuntimeError('Error calling caffe.')
 
+retrain_signal_filename = os.path.join(config.src_path, 'retraining.signal')
+retrain_log_filename = os.path.join(config.src_path, 'cnn', 'retrain.log')
+
+def is_network_retrain_running():
+    return os.path.isfile(retrain_signal_filename)
+
+def launch_network_retrain():
+    subprocess.call(['touch', retrain_signal_filename])
+    retrain_cmd = os.path.join(config.src_path, 'retrain_network.py')
+    cmd = [retrain_cmd, '>' + retrain_log_filename, '2>&1 &']
+    os.system(' '.join(cmd))
+
 if __name__ == '__main__':
     retrain()
     convert_epi1()
     # Restart worker process
     send_restart_signal()
+    # Retrain done
+    os.remove(retrain_signal_filename)
