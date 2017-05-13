@@ -78,8 +78,12 @@ def upload_archive(dataset_id, file, filename):
             fid.write(contents)
         print 'Written to ', full_fn
         # Add
-        add_uploaded_image(dataset_id, full_fn, image_filename)
-        n_added += 1
+        if add_uploaded_image(dataset_id, full_fn, image_filename) is not None:
+            n_added += 1
+        else:
+            # Cleanup invalid
+            if os.path.isfile(full_fn):
+                os.remove(full_fn)
     set_error('%d images added.' % n_added)
     return redirect('/dataset/%s' % str(dataset_id))
 
@@ -96,7 +100,11 @@ def upload_image(dataset_id, file, filename):
 
 def add_uploaded_image(dataset_id, full_fn, filename):
     # Get some image info
-    im = Image.open(full_fn)
+    try:
+        im = Image.open(full_fn)
+    except:
+        print 'Invalid image file: %s' % full_fn
+        return None
     # Add DB entry (after file save to worker can pick it up immediately)
     entry = db.add_sample(filename, size=im.size, dataset_id=dataset_id)
     # Image size
