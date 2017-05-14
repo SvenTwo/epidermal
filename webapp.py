@@ -14,7 +14,7 @@ from webapp_admin import admin
 from webapp_export import data_export
 
 app = Flask(__name__)
-app.debug = True
+app.debug = (config.debug_flask > 0)
 app.register_blueprint(admin)
 app.register_blueprint(data_export)
 
