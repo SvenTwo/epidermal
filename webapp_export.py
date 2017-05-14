@@ -11,6 +11,8 @@ import db
 import string
 from webapp_base import pop_last_error
 from werkzeug.utils import secure_filename
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
