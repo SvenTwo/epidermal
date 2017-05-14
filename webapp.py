@@ -157,7 +157,7 @@ def show_info(id):
             an['image_filename'] = 'heatmaps/' + ad['heatmap_image_filename']
             has_image_output = True
         else:
-            an['title'] = 'By user %s' % ad['user_name']
+            an['title'] = 'By user %s' % ad.get('user_name')
         positions = ad['positions']
         if positions is not None:
             an['info_string'] += ' %d stomata' % len(positions)
