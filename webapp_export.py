@@ -11,6 +11,10 @@ import db
 import string
 from webapp_base import pop_last_error
 from werkzeug.utils import secure_filename
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
+import numpy as np
 
 data_export = Blueprint('data_export', __name__, template_folder='templates')
 
@@ -39,3 +43,22 @@ def dataset_export(dataset_id_str):
                     mimetype="text/plain",
                     headers={"Content-Disposition":
                                  "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/dataset/<dataset_id_str>/export_correlation')
+def dataset_export_correlation(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    dataset_info = db.get_dataset_by_id(dataset_id)
+    finished = db.get_processed_samples(dataset_id=dataset_id)
+    valid = [s for s in finished if s.get('human_position_count') is not None and s.get('machine_position_count') is not None]
+    hu = np.array([s['human_position_count'] for s in valid])
+    ma = np.array([s['machine_position_count'] for s in valid])
+    sns.regplot(y=hu, x=ma)
+    ax = plt.gca()
+    ax.set_ylabel('Human stomata count')
+    ax.set_xlabel('Automatic stomata count')
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return Response(buf, mimetype="image/png")

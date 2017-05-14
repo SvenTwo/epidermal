@@ -13,6 +13,7 @@
           <form action="/delete_dataset/{{ dataset_id }}" method=post onsubmit="return confirm('Really delete dataset {{ dataset_name }}?');">
               <p>Dataset <strong>{{ dataset_name }}</strong>.</p>
               <p><a href="/dataset/{{ dataset_id }}/export">Export results as csv</a></p>
+              <p><a href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a></p>
               <p><input type=submit value="Delete Dataset"></p>
           </form>
       </div>
