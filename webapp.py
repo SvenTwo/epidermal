@@ -185,7 +185,7 @@ def annotate(id):
     else:
         annotations_json = []
     return render_template("annotate.html", id=id, image_filename=image_filename, info_string=info_string, error=pop_last_error(),
-                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json)
+                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json, margin=96)
 
 
 # Save annotations
