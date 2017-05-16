@@ -11,10 +11,12 @@ import json
 from config import config
 from zipfile import ZipFile
 from webapp_admin import admin
+from webapp_export import data_export
 
 app = Flask(__name__)
-app.debug = True
+app.debug = (config.debug_flask > 0)
 app.register_blueprint(admin)
+app.register_blueprint(data_export)
 
 # Error handling
 app.epi_last_error = None
@@ -155,7 +157,7 @@ def show_info(id):
             an['image_filename'] = 'heatmaps/' + ad['heatmap_image_filename']
             has_image_output = True
         else:
-            an['title'] = 'By user %s' % ad['user_name']
+            an['title'] = 'By user %s' % ad.get('user_name')
         positions = ad['positions']
         if positions is not None:
             an['info_string'] += ' %d stomata' % len(positions)
@@ -183,7 +185,7 @@ def annotate(id):
     else:
         annotations_json = []
     return render_template("annotate.html", id=id, image_filename=image_filename, info_string=info_string, error=pop_last_error(),
-                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json)
+                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json, margin=96)
 
 
 # Save annotations
@@ -261,7 +263,7 @@ def dataset_info(dataset_id_str):
     if request.method == 'POST':
         # File upload
         return upload_file(dataset_id)
-    enqueued = db.get_unprocessed_samples()
+    enqueued = db.get_unprocessed_samples(dataset_id=dataset_id)
     finished = db.get_processed_samples(dataset_id=dataset_id)
     errored = db.get_error_samples(dataset_id=dataset_id)
     # Get request data

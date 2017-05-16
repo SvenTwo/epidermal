@@ -8,6 +8,7 @@ class Config:
     def __init__(self, config_filepath='~/.epidermal'):
 
         # Default configuration values
+        self.debug_flask = 1
 
         # Database connection
         self.db_address = 'localhost'
