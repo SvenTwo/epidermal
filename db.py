@@ -11,10 +11,17 @@ epidermal_db = client.epidermal
 ### Datasets ###
 ###############
 datasets = epidermal_db['datasets']
+samples = epidermal_db['samples']
+
 # 'name' (str): Name to identify the dataset
 
+def get_dataset_info(s):
+    # Add sample counts for dataset
+    s['sample_count'] = samples.count({'dataset_id': s['_id']})
+    return s
+
 def get_datasets(deleted=False):
-    return [s for s in datasets.find({'deleted': deleted})]
+    return [get_dataset_info(s) for s in datasets.find({'deleted': deleted})]
 
 def get_dataset_by_id(dataset_id):
     return datasets.find_one({'_id': dataset_id})
@@ -32,7 +39,6 @@ def delete_dataset(dataset_id):
 
 ### Samples ###
 ###############
-samples = epidermal_db['samples']
 # 'filename' (str): Filename (without path) of image
 # 'dataset_id' (id): Parent dataset
 # 'processed' (bool): Whether it has been processed by at least one model

@@ -26,7 +26,7 @@
             <h2>Datasets</h2>
             <ul>
             {% for item in datasets %}
-                <li><a href="/dataset/{{ item._id }}">{{ item.name }}</a></li>
+                <li><a href="/dataset/{{ item._id }}">{{ item.name }}</a> ({{ item.sample_count }})</li>
             {% endfor %}
             </ul>
             <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
