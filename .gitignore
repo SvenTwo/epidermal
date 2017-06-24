@@ -96,3 +96,4 @@ out/
 *_lmdb
 retrain.log
 *.signal
+cnn/out
