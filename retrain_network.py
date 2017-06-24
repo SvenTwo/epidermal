@@ -21,7 +21,7 @@ def imagelist2lmdb(image_root, imagelist_filename, lmdb_filename):
 
 def retrain(output_path=None):
     # Prepare data
-    exec_path = os.path.join(os.path.dirname(__file__), 'cnn')
+    exec_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'cnn'))
     if output_path is None:
         output_path = gen_new_output_path()
         db2patches(output_path)
@@ -42,6 +42,7 @@ def retrain(output_path=None):
     real_cnn_output_path = os.path.join(output_path, 'cnn')
     if not os.path.isdir(real_cnn_output_path):
         os.makedirs(real_cnn_output_path)
+    print 'Link %s to %s' % (real_cnn_output_path, cnn_output_path)
     os.symlink(real_cnn_output_path, cnn_output_path)
     # Run caffe!
     caffe_cmd = os.path.join(config.caffe_path, 'tools', 'caffe')
@@ -63,6 +64,7 @@ def launch_network_retrain():
     os.system(' '.join(cmd))
 
 if __name__ == '__main__':
+    #retrain('/media/data/epidermal/DS_2017_06_24_15_40')
     retrain()
     convert_epi1()
     # Restart worker process
