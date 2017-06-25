@@ -33,7 +33,7 @@
             <a href="javascript:addDataset()">Add dataset...</a>
        </div>
         <div class="col-md-4">
-            <h2>Enqueued</h2>
+            <h2>Enqueued ({{ enqueued|length }})</h2>
             <ul>
             {% for item in enqueued %}
                 <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
