@@ -10,62 +10,85 @@
     <div class="jumbotron">
       <div class="container">
         <!--<h1 class="display-3">Stomata Counter</h1>-->
-          <form action="/delete_dataset/{{ dataset_id }}" method=post onsubmit="return confirm('Really delete dataset {{ dataset_name }}?');">
-              <p>Dataset <strong>{{ dataset_name }}</strong>.</p>
-              <p><a href="/dataset/{{ dataset_id }}/export">Export results as csv</a></p>
-              <p><a href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a></p>
-              <p><input type=submit value="Delete Dataset"></p>
-          </form>
+          <h3>Dataset <strong>{{ dataset_name }}</strong>.</h3>
+          <div class="col-md-3 float-md-right">
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Dataset operations
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
+                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    <a class="dropdown-item" href="javascript:del_dataset('{{ dataset_name }}')"><strong>Delete dataset</strong></a>
+                </div>
+              </div>
+              <form id="del_dataset" action="/delete_dataset/{{ dataset_id }}" method="post"></form>
+          </div>
       </div>
     </div>
     <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-4">
-            <h2>Add file(s)</h2>
-            <form action="/dataset/{{ dataset_id }}" method=post enctype=multipart/form-data>
-                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
-                <p><input type=file name=file><input type=submit value=Upload></p>
-            </form>
-        </div>
-        <div class="col-md-4">
-            <h2>Enqueued</h2>
-            <ul>
-            {% for item in enqueued %}
-                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
-            {% endfor %}
-            </ul>
-            <p>Queue status: <emph>{{ status }}</emph></p>
-          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
-       </div>
-        <div class="col-md-4">
-            <h2>Finished</h2>
-            	<p>Click an image name to view the results or annotate images.</p>
-            <table class="table table-striped"><thead><tr><td>Image</td><td>Automatic</td><td>Manual</td></tr></thead>
-            <tbody>
-            {% for item in finished %}
-                <tr>
-                    <td><a href="/info/{{ item._id }}">{{ item.filename }}</a></td>
-                    <td>{{ item.machine_position_count }}</td>
-                    <td>{{ item.human_position_count }}</td>
-                </tr>
-            {% endfor %}
-            </tbody></table>>
-            </ul>
-            <h2>Errored</h2>
-            <ul>
-            {% for item in errored %}
-                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
-            {% endfor %}
-            </ul>
-        </div>
-      </div>
+        <div class="row mt-2">
+            <div class="col-md-4">
+                <h2>Add file(s)</h2>
+                <form action="/dataset/{{ dataset_id }}" method=post enctype=multipart/form-data id="upload_image_form">
+                    <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
+                    <p><input type=file name=file id="upload_image"></p>
+                </form>
+            </div>
 
+            {% if enqueued %}
+            <div class="col-md-4">
+                <h2>Enqueued files</h2>
+                <ul>
+                {% for item in enqueued %}
+                    <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+                {% endfor %}
+                </ul>
+                <p>Queue status: <emph>{{ status }}</emph></p>
+              <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
+           </div>
+            {% endif %}
+        </div>
+
+        <div class="row mt-2">
+
+            {% if finished %}
+            <div class="col-md-12">
+                <h2>Processed files</h2>
+                    <p>Click an image name to view the results or annotate images. Click a column header to sort the table.</p>
+                <table class="table table-striped" id="sample_list"><thead><tr><td>Image</td><td>Manual</td><td>Automatic</td><td>Distance</td><td>Hopkins</td><td>Date added</td></tr></thead>
+                <tbody>
+                {% for item in finished %}
+                    <tr>
+                        <td><a href="/info/{{ item._id }}">{{ item.filename }}</a></td>
+                        <td>{{ item.human_position_count }}</td>
+                        <td>{{ item.machine_position_count }}</td>
+                        <td>{{ '%.3f' % item.machine_distance }}</td>
+                        <td>{{ '%.3f' % item.machine_hopkins }}</td>
+                        <td>{{ item.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody></table>
+            </div>
+            {% endif %}
+
+            {% if errored %}
+            <div class="col-md-3 mt-2">
+                </ul>
+                <h2>Errored</h2>
+                <ul>
+                {% for item in errored %}
+                    <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
         {{ super() }}
     </div> <!-- /container -->
 {% endblock %}
 
 {% block tailjs %}
     {{ super() }}
-    <!-- <script src="/static/js/foo.js"></script> -->
+     <script src="/static/js/dataset.js?v=2"></script>
 {% endblock %}

@@ -5,6 +5,7 @@ var update_display;
 var annotation_margin = 32;
 var display_radius = 32;
 var svg = d3.select("#annotation_svg");
+var has_unsaved_changes = false;
 
 var last_stoma_id = 0;
 var annotations = saved_annotations.map(function(stoma){
@@ -21,6 +22,8 @@ var stomaClick = function() {
   d3.select(this).remove();
   // Don't process click event on container
   d3.event.stopPropagation();
+  // Remember change status
+  has_unsaved_changes = true;
 };
 
 
@@ -48,6 +51,8 @@ svg.on("mousedown", function() {
     };
     annotations.push(new_annotation);
     update_display();
+    // Remember change status
+    has_unsaved_changes = true;
 });
 
 // Initial update of loaded annotations
@@ -64,4 +69,11 @@ $(document).ready(function(){
         $('#form_margin').attr('value', ""+annotation_margin);
         return true;
     });
+});
+
+// Leave page: Confirmation
+$('.navigate_dataset').click(function(){
+    if (has_unsaved_changes) {
+        return confirm("Discard changes to annotations? (Press 'Save' or 'Save and annotate next' to save them instead)");
+    }
 });

@@ -64,7 +64,7 @@ def launch_network_retrain():
     os.system(' '.join(cmd))
 
 if __name__ == '__main__':
-    #retrain('/media/data/epidermal/DS_2017_06_24_15_40')
+    #retrain('/data/epidermal_train/DS_2017_10_21_20_46')
     retrain()
     convert_epi1()
     # Restart worker process

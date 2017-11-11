@@ -1,14 +1,17 @@
 /* Move down content because we have a fixed navbar that is 50px tall */
-body {
+/*body {
   padding-bottom: 2rem;
-}
+}*/
 .stoma {
-     fill: rgba(255, 255, 255, 0.5);
-     stroke: red;
-     stroke-width: 2;
+    fill: rgba(255, 255, 255, 0.0);
+    stroke: red;
+    stroke-width: 6;
 }
 .stoma:hover {
-     fill: rgba(255, 200, 200, 0.6);
-     stroke: #FF8080;
-     stroke-width: 4;
+    fill: rgba(255, 200, 200, 0.6);
+    stroke: #FF8080;
+    stroke-width: 12;
+}
+form {
+    display: inline-block;
 }

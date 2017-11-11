@@ -12,6 +12,7 @@ from config import config
 from zipfile import ZipFile
 from webapp_admin import admin
 from webapp_export import data_export
+from math import sqrt
 
 app = Flask(__name__)
 app.debug = (config.debug_flask > 0)
@@ -50,18 +51,21 @@ def upload_file(dataset_id):
     else:
         return error_redirect('Invalid or disallowed file type.')
 
+
 def make_unique_server_image_filename(filename):
     basename, ext = os.path.splitext(filename)
     filename = basename + ext
     i = 1
     while True:
         full_fn = os.path.join(config.server_image_path, filename)
-        if not os.path.isfile(full_fn): break
+        if not os.path.isfile(full_fn):
+            break
         filename = '%s-%03d%s' % (basename, i, ext)
         i += 1
     return full_fn
 
-def upload_archive(dataset_id, file, filename):
+
+def upload_archive(dataset_id, file, _filename):
     zipf = ZipFile(file.stream, 'r')
     print 'ZIPF:'
     for nfo in zipf.infolist():
@@ -77,9 +81,9 @@ def upload_archive(dataset_id, file, filename):
             continue
         # Extract
         full_fn = make_unique_server_image_filename(image_filename)
-        file = zipf.open(nfo)
+        zfile = zipf.open(nfo)
         with open(full_fn, 'wb') as fid:
-            contents = file.read()
+            contents = zfile.read()
             fid.write(contents)
         print 'Written to ', full_fn
         # Add
@@ -93,16 +97,17 @@ def upload_archive(dataset_id, file, filename):
     return redirect('/dataset/%s' % str(dataset_id))
 
 
-def upload_image(dataset_id, file, filename):
+def upload_image(dataset_id, imfile, filename):
     # Make unique filename
     full_fn = make_unique_server_image_filename(filename)
     # Save it
-    file.save(full_fn)
+    imfile.save(full_fn)
     # Process
     entry = add_uploaded_image(dataset_id, full_fn, filename)
     # Redirect to file info
     #return redirect('/info/%s' % str(entry['_id']))
     return redirect('/dataset/%s' % str(dataset_id))
+
 
 def add_uploaded_image(dataset_id, full_fn, filename):
     # Get some image info
@@ -119,14 +124,18 @@ def add_uploaded_image(dataset_id, full_fn, filename):
 
 
 # Entry info page
-@app.route('/info/<id>')
-def show_info(id):
+@app.route('/info/<sid>')
+def show_info(sid):
     # Query info from DB
-    sample_id = ObjectId(id)
+    sample_id = ObjectId(sid)
     sample_entry = db.get_sample_by_id(sample_id)
+    sample_index, sample_count, prev_sample_id, next_sample_id = db.get_sample_index(sample_entry['dataset_id'],
+                                                                                     sample_id)
     # Unknown entry?
     if sample_entry is None:
         return error_redirect('Unknown entry: "%s".' % str(sample_id))
+    # Allow fixing of machine annotation? Only if not human-annotated and there is a machine annotation with stomata
+    can_annotate_diff = (not sample_entry['annotated']) and (sample_entry['machine_position_count'])
     # Determine data
     refresh = False
     filename = sample_entry['filename']
@@ -144,8 +153,7 @@ def show_info(id):
     has_image_output = False
     for ad in annotation_data:
         model_id = ad.get('model_id')
-        an = {}
-        an['info_string'] = ''
+        an = {'info_string': ''}
         if model_id is not None:
             model_data = db.get_model_by_id(model_id)
             if model_data is None:
@@ -162,41 +170,77 @@ def show_info(id):
         if positions is not None:
             an['info_string'] += ' %d stomata' % len(positions)
         annotations += [an]
+    annotations = reversed(annotations)
     if not has_image_output:
         annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
-    return render_template("info.html", id=id, name=name, dataset_id=dataset_id, info_string=info_string, annotations=annotations, error=pop_last_error(), refresh=refresh)
+    return render_template("info.html", id=sid, name=name, dataset_id=dataset_id, info_string=info_string,
+                           annotations=annotations, error=pop_last_error(), refresh=refresh,
+                           sample_index=sample_index, sample_count=sample_count, prev_id=str(prev_sample_id),
+                           next_id=str(next_sample_id), can_annotate_diff=can_annotate_diff)
 
 
 # Annotation page
-@app.route('/annotate/<id>', methods=['GET', 'POST'])
-def annotate(id):
+@app.route('/annotate/<sid>', methods=['GET', 'POST'])
+def annotate(sid, differential=0):
     # Query info from DB
-    sample_id = ObjectId(id)
+    sample_id = ObjectId(sid)
     sample_entry = db.get_sample_by_id(sample_id)
+    dataset_id = str(sample_entry['dataset_id'])
+    sample_index, sample_count, prev_sample_id, next_sample_id = db.get_sample_index(sample_entry['dataset_id'],
+                                                                                     sample_id)
     # Unknown entry?
     if sample_entry is None:
         return error_redirect('Unknown entry: "%s".' % str(sample_id))
     # Determine data
     image_filename = 'images/' + sample_entry['filename']
     info_string = ''
+    # Differential? Then load machine annotations, unless there are human annotations already
     annotations = db.get_human_annotations(sample_id)
+    is_differential = request.args.get('differential')
+    if is_differential and not annotations:
+        annotations = db.get_machine_annotations(sample_id)
     if len(annotations):
         annotations_json = annotations[0]['positions']
+        # Machine annotations are in a different format
+        if len(annotations_json) and isinstance(annotations_json[0], list):
+            annotations_json = [{'x': a[0], 'y': a[1]} for a in annotations_json]
     else:
         annotations_json = []
-    return render_template("annotate.html", id=id, image_filename=image_filename, info_string=info_string, error=pop_last_error(),
-                           height=sample_entry['size'][1], width=sample_entry['size'][0], annotations=annotations_json, margin=96)
+    return render_template("annotate.html", id=sid, image_filename=image_filename, info_string=info_string,
+                           error=pop_last_error(), height=sample_entry['size'][1], width=sample_entry['size'][0],
+                           annotations=annotations_json, margin=96, dataset_id=dataset_id, sample_index=sample_index,
+                           sample_count=sample_count, prev_id=str(prev_sample_id), next_id=str(next_sample_id),
+                           is_differential=is_differential)
 
 
 # Save annotations
-@app.route('/save_annotations/<id>', methods=['GET', 'POST'])
-def save_annotations(id):
-    # Add by name. Forward to newly created dataset
+@app.route('/save_annotations/<sid>', methods=['GET', 'POST'])
+def save_annotations(sid):
+    sample_id = ObjectId(sid)
+    is_differential = request.args.get('differential')
+    if is_differential:
+        base_annotations = db.get_machine_annotations(sample_id)
+        redirect_params = '?differential=1'
+    else:
+        base_annotations = None
+        redirect_params = ''
+    # Save annotations for sample
     annotations = json.loads(request.form['annotations'].strip())
     margin = int(request.form['margin'].strip())
-    print 'Saving annotations.', id, margin, annotations
-    db.set_human_annotation(ObjectId(id), db.get_default_user(), annotations, margin)
-    return redirect('/info/' + id)
+    print 'Saving annotations.', sid, margin, annotations
+    db.set_human_annotation(sample_id, db.get_default_user(), annotations, margin, base_annotations=base_annotations)
+    # Forward either to info page or to annotation of next un-annotated entry in DB if found
+    annotate_next = ("save_and_continue" in request.form)
+    if annotate_next:
+        dataset_id = ObjectId(request.form['dataset_id'].strip())
+        next_sample_id = db.get_next_sample_id(dataset_id, sample_id, annotated=False)
+        if next_sample_id is not None:
+            return redirect('/annotate/' + str(next_sample_id) + redirect_params)
+        else:
+            set_error('No more samples to annotate.')
+            return redirect('/dataset/' + str(dataset_id))
+    # Nothing
+    return redirect('/info/' + sid)
 
 
 # Delete entry
@@ -265,6 +309,8 @@ def dataset_info(dataset_id_str):
         return upload_file(dataset_id)
     enqueued = db.get_unprocessed_samples(dataset_id=dataset_id)
     finished = db.get_processed_samples(dataset_id=dataset_id)
+    for sample in finished:
+        sample['machine_distance'] = 1.0/max([0.001, sqrt(float(sample['machine_position_count']))])
     errored = db.get_error_samples(dataset_id=dataset_id)
     # Get request data
     return render_template("dataset.html", dataset_name=dataset_info['name'], dataset_id=dataset_id_str, enqueued=enqueued, finished=finished, errored=errored, status=db.get_status('worker'), error=pop_last_error())
@@ -279,4 +325,5 @@ def overview():
 
 
 # Start flask app
-app.run(host='0.0.0.0', port=9000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=9000)

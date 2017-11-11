@@ -50,6 +50,8 @@ def process_images(net, model_id):
         except Exception, e:
             db.set_sample_error(sample['_id'], "Processing error:\n" +str(e))
 
+
+
 EXITCODE_RESTART = 55
 restart_signal_filename = os.path.join(config.src_path, 'restart_worker.signal')
 

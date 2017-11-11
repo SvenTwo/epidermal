@@ -36,6 +36,7 @@ class Config:
         self.image_extensions = ['.jpg', '.jpeg', '.png']
         self.archive_extensions = ['.zip']
         self.max_image_file_size = 1024 * 1024 * 50 # 50MB
+        self.worker_gpu_index = 0
 
         # Local source root
         self.src_path = os.path.dirname(__file__)

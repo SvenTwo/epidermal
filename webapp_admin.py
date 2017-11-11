@@ -3,7 +3,7 @@
 
 import os
 from functools import wraps
-from flask import render_template, request, Response, Blueprint
+from flask import render_template, request, Response, Blueprint, jsonify
 from config import config
 import db
 #from retrain_network import is_network_retrain_running, launch_network_retrain, retrain_log_filename
@@ -43,6 +43,28 @@ def admin_page():
     enqueued = db.get_unprocessed_samples()
     return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations,
                            datasets=datasets, enqueued=enqueued, status=db.get_status('worker'), error=pop_last_error())
+
+@admin.route('/tag/add', methods=['POST'])
+@requires_admin
+def tag_add():
+    data = request.form
+    dataset_id = db.ObjectId(data['dataset_id'])
+    new_tag_name = data['tag_name']
+    db.add_dataset_tag(dataset_id, new_tag_name)
+    print 'Added tag %s to %s' % (new_tag_name, dataset_id)
+    return jsonify('OK'), 200
+
+
+@admin.route('/tag/remove', methods=['POST'])
+@requires_admin
+def tag_remove():
+    data = request.form
+    dataset_id = db.ObjectId(data['dataset_id'])
+    tag_name = data['tag_name']
+    db.remove_dataset_tag(dataset_id, tag_name)
+    print 'Removed tag %s from %s' % (tag_name, dataset_id)
+    return jsonify('OK'), 200
+
 
 @admin.route('/admin/retrain', methods=['GET', 'POST'])
 @requires_admin

@@ -24,7 +24,7 @@ def load_model(iter, model_name, train_name, fc8_suffix, input_size):
     model_fn = os.path.join(config.src_path, 'cnn', 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
     proto_fn_fcn = os.path.join(config.src_path, 'cnn', model_name + 'fcn.prototxt')
     caffe.set_mode_gpu()
-    caffe.set_device(2)
+    caffe.set_device(config.worker_gpu_index)
     net = caffe.Net(proto_fn_fcn, caffe.TEST, weights=model_fn)
     net.blobs['data'].reshape(1, 3, input_size[1], input_size[0])
     net.input_size = input_size[:2]

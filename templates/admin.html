@@ -10,29 +10,68 @@
       <div class="container">
         <h2>Admin</h2>
       </div>
+          <div class="col-md-3 float-md-right">
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Admin operations
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="/export_all">Export all to CSV</a>
+                </div>
+              </div>
+          </div>
     </div>
 
     <div class="container">
-        <p>Admin page.</p>
-        <p><strong>Images:</strong> {{ num_images }}</p>
-        <p><strong>Human annotations:</strong> {{ num_human_annotations }}</p>
+        <div class="row">
+            <ul>
+                <li><p><strong>Total samples:</strong> {{ num_images }}</p></li>
+                <li><p><strong>Total annotations:</strong> {{ num_human_annotations }}</p></li>
+            </ul>
+        </div>
         <!--<form action="/admin/retrain" method=post>
             <p><input type=submit value=Retrain></p>
         </form>-->
 
       <!-- Example row of columns -->
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-12">
             <h2>Datasets</h2>
-            <ul>
-            {% for item in datasets %}
-                <li><a href="/dataset/{{ item._id }}">{{ item.name }}</a> ({{ item.sample_count }})</li>
-            {% endfor %}
-            </ul>
+            <table id="dataset_list" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Samples</th>
+                        <th>Human annotations</th>
+                        <th>Date added</th>
+                        <th>Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datasets %}
+                        <tr>
+                            <td><a href="/dataset/{{ item._id }}">{{ item.name }}</a></td>
+                            <td>{{ item.sample_count }}</td>
+                            <td>{{ item.human_annotation_count }}</td>
+                            <td>{{ item.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% for tag in item.tags %}
+                                    <a class="btn btn-secondary text-white">{{ tag }}&nbsp;
+                                        <button type="button" class="close rm-tag-btn" aria-label="Close" id="rmtag_{{ item._id }}_{{ tag }}">
+                                            <span aria-hidden="true" class="text-white">&times;</span>
+                                        </button>
+                                    </a>
+                                {% endfor %}
+                                <button class="btn btn-secondary add-tag-btn" id="addtag_{{ item._id }}">+</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
             <a href="javascript:addDataset()">Add dataset...</a>
        </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mt-4">
             <h2>Enqueued ({{ enqueued|length }})</h2>
             <ul>
             {% for item in enqueued %}
@@ -50,5 +89,5 @@
 
 {% block tailjs %}
     {{ super() }}
-    <!-- <script src="/static/js/foo.js"></script> -->
+    <script src="/static/js/admin.js"></script>
 {% endblock %}

@@ -57,6 +57,9 @@ def extract_distractor_positions(img, allpos, output_path, img_name, angles, ext
     n = 0
     size = img.shape
     min_margin = [c*3/2 for c in extract_size] # For now, only extract near the center because of unlabeled targets near the border
+    if any([min_margin[i] >= size[1 - i] - min_margin[i] for i in (0, 1)]):
+        print 'WARNING: Cannot extract from image size %s (min margin %s)' % (size, min_margin)
+        return 0
     min_dist = max(extract_size)
     max_retry = 100000
     while n_distractors and max_retry:

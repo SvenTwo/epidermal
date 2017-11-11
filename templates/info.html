@@ -11,20 +11,32 @@
 {% block content %}
     <div class="container">
         <h1>{{ name }}</h1>
-        <p>&lt;&lt; Back to <a href="/dataset/{{ dataset_id }}">Image list</a></p>
+        <p>
+            &lt;&lt; Back to <a href="/dataset/{{ dataset_id }}">Image list</a>
+            <span class="float-right">
+                <a href="/info/{{ prev_id }}">Prev &lt;&lt;</a>
+                &nbsp;{{ sample_index }} / {{ sample_count }}&nbsp;
+                <a href="/info/{{ next_id }}">&gt;&gt; Next</a>
+            </span>
+        </p>
 
-        <div class="row">
+        <div class="row form-group">
             <div class="col-md-6">
-                <p class="lead">{{ info_string }}</p>
-                <p>Click the annotate button to manually count stomata.</p>
-            </div>
-            <div class="col-md-6">
-                <form action="/annotate/{{ id }}" method=post>
-                    <input type=submit value="Annotate">
-                </form>
-                <form action="/delete/{{ id }}" method=post>
-                    <input type=submit value="Delete">
-                </form>
+                <p><span class="lead">Status:</span>&nbsp;&nbsp;{{ info_string }}</p>
+                <div>
+                    <span class="lead">Actions:</span>&nbsp;&nbsp;
+                    <form action="/annotate/{{ id }}" method=post>
+                        <input type=submit value="Annotate">
+                    </form>
+                    {% if can_annotate_diff %}
+                    <form action="/annotate/{{ id }}?differential=1" method=post>
+                        <input type=submit value="Annotate from automatic">
+                    </form>
+                    {% endif %}
+                    <form action="/delete/{{ id }}" method=post>
+                        <input type=submit value="Delete">
+                    </form>
+                </div>
             </div>
         </div>
 
