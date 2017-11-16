@@ -9,6 +9,7 @@ import db
 #from retrain_network import is_network_retrain_running, launch_network_retrain, retrain_log_filename
 import string
 from webapp_base import pop_last_error
+from bson.objectid import ObjectId
 
 admin = Blueprint('admin', __name__, template_folder='templates')
 
@@ -48,7 +49,7 @@ def admin_page():
 @requires_admin
 def tag_add():
     data = request.form
-    dataset_id = db.ObjectId(data['dataset_id'])
+    dataset_id = ObjectId(data['dataset_id'])
     new_tag_name = data['tag_name']
     db.add_dataset_tag(dataset_id, new_tag_name)
     print 'Added tag %s to %s' % (new_tag_name, dataset_id)
@@ -59,7 +60,7 @@ def tag_add():
 @requires_admin
 def tag_remove():
     data = request.form
-    dataset_id = db.ObjectId(data['dataset_id'])
+    dataset_id = ObjectId(data['dataset_id'])
     tag_name = data['tag_name']
     db.remove_dataset_tag(dataset_id, tag_name)
     print 'Removed tag %s from %s' % (tag_name, dataset_id)

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Login</title>
+{% endblock %}
+
+{% block content %}
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="container">
+        <div class="col-md-8">
+            {% from "security/_macros.html" import render_field_with_errors, render_field %}
+            {% include "security/_messages.html" %}
+            <h1>Login</h1>
+            <p>Login to access your saved datasets and annotations.</p>
+            <form action="{{ url_for_security('login') }}" method="POST" name="login_user_form">
+              {{ login_user_form.hidden_tag() }}
+              {{ render_field_with_errors(login_user_form.email) }}
+              {{ render_field_with_errors(login_user_form.password) }}
+              {{ render_field_with_errors(login_user_form.remember) }}
+              {{ render_field(login_user_form.next) }}
+              {{ render_field(login_user_form.submit) }}
+              <p>If you do not have an account, <a href="{{ url_for_security('register') }}">click here to register</a>.</p>
+              <p>If you forgot the password, <a href="{{ url_for_security('forgot_password') }}">click here to email it</a>.</p>
+            </form>
+        </div>
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}

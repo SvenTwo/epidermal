@@ -1,0 +1,9 @@
+Welcome, {{ user.email }}!
+
+You registered an account on http://www.stomata.science/
+
+{% if security.confirmable %}
+{{ _('You can confirm your email through the link below:') }}
+
+{{ confirmation_link }}
+{% endif %}

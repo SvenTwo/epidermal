@@ -20,8 +20,8 @@
                     <input type="hidden" id="form_annotations" name="annotations" value="">
                     <input type="hidden" id="form_margin" name="margin" value="0">
                     <input type="hidden" id="form_dataset_id" name="dataset_id" value="{{ dataset_id }}">
-                    <input type="submit" name="save", value="Save">
-                    <input type="submit" name="save_and_continue" value="Save and annotate next">
+                    <input type="submit" name="save", value="Save" {% if readonly %}disabled{% endif %}>
+                    <input type="submit" name="save_and_continue" value="Save and annotate next" {% if readonly %}disabled{% endif %}>
                 </form>
                 <form action="/info/{{ id }}" method=get>
                     <input type="submit" value="Cancel">

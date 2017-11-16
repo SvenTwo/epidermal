@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Your datasets ({{ user.email }})</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+          <h2>Your datasets <small>({{ user.email }})</small></h2>
+      </div>
+          <div class="col-md-3 float-md-right">
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    User operations
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="/user_export_all">Export all to CSV</a>
+                </div>
+              </div>
+          </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <p><strong>Not implemented yet.</strong></p>
+        </div>
+        <!--<form action="/admin/retrain" method=post>
+            <p><input type=submit value=Retrain></p>
+        </form>-->
+
+      <!-- <div class="row">
+        <div class="col-md-12">
+            <h2>Datasets</h2>
+            <table id="dataset_list" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Samples</th>
+                        <th>Human annotations</th>
+                        <th>Date added</th>
+                        <th>Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datasets %}
+                        <tr>
+                            <td><a href="/dataset/{{ item._id }}">{{ item.name }}</a></td>
+                            <td>{{ item.sample_count }}</td>
+                            <td>{{ item.human_annotation_count }}</td>
+                            <td>{{ item.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% for tag in item.tags %}
+                                    <a class="btn btn-secondary text-white">{{ tag }}&nbsp;
+                                        <button type="button" class="close rm-tag-btn" aria-label="Close" id="rmtag_{{ item._id }}_{{ tag }}">
+                                            <span aria-hidden="true" class="text-white">&times;</span>
+                                        </button>
+                                    </a>
+                                {% endfor %}
+                                <button class="btn btn-secondary add-tag-btn" id="addtag_{{ item._id }}">+</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
+            <a href="javascript:addDataset()">Add dataset...</a>
+       </div> -->
+          {% if enqueued %}
+        <div class="col-md-4 mt-4">
+            <h2>Enqueued ({{ enqueued|length }})</h2>
+            <ul>
+            {% for item in enqueued %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+            <p>Queue status: <emph>{{ status }}</emph></p>
+          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
+       </div>
+          {% endif %}
+      </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}

@@ -19,7 +19,9 @@
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    {% if not readonly %}
                     <a class="dropdown-item" href="javascript:del_dataset('{{ dataset_name }}')"><strong>Delete dataset</strong></a>
+                    {% endif %}
                 </div>
               </div>
               <form id="del_dataset" action="/delete_dataset/{{ dataset_id }}" method="post"></form>
@@ -27,6 +29,7 @@
       </div>
     </div>
     <div class="container">
+        {% if not readonly %}
         <div class="row mt-2">
             <div class="col-md-4">
                 <h2>Add file(s)</h2>
@@ -49,6 +52,7 @@
            </div>
             {% endif %}
         </div>
+        {% endif %}
 
         <div class="row mt-2">
 

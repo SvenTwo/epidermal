@@ -38,6 +38,20 @@ def get_dataset_by_name(dataset_name, deleted=False):
     return datasets.find_one({'name': dataset_name, 'deleted': deleted})
 
 
+def get_example_dataset():
+    return datasets.find_one({ 'tags': { '$in': ["examples"] }, 'deleted': False })
+
+
+def is_readonly_dataset(dataset):
+    print 'is_readonly_dataset', dataset
+    return "examples" in dataset['tags']
+
+
+def is_readonly_dataset_id(dataset_id):
+    print 'is_readonly_dataset_id', dataset_id
+    return is_readonly_dataset(get_dataset_by_id(dataset_id))
+
+
 def add_dataset(name):
     dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': []}
     dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id

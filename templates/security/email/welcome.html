@@ -1,0 +1,8 @@
+<p>Welcome, {{ user.email }}!</p>
+<p>You registered an account on <a href="http://www.stomata.science/">http://www.stomata.science/</a>. </p>
+
+{% if security.confirmable %}
+<p>{{ _('You can confirm your email through the link below:') }}</p>
+
+<p><a href="{{ confirmation_link }}">{{ _('Confirm my account') }}</a></p>
+{% endif %}

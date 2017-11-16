@@ -41,6 +41,27 @@ class Config:
         # Local source root
         self.src_path = os.path.dirname(__file__)
 
+        # Flask app config
+        self.APP_SECRET_KEY = ''  # Set this in .epidermal!
+        self.APP_SECURITY_REGISTERABLE = True
+        self.APP_SECURITY_CHANGEABLE = True
+        self.APP_SECURITY_PASSWORD_SALT = ''  # Set this in .epidermal!
+        self.APP_DEFAULT_MAIL_SENDER = 'stomatacounter@gmail.com'
+        self.APP_SECURITY_EMAIL_SENDER = 'stomatacounter@gmail.com'
+        self.APP_SECURITY_REGISTERABLE = True
+        self.APP_SECURITY_CONFIRMABLE = False
+        self.APP_SECURITY_RECOVERABLE = True
+
+        self.APP_MAIL_SERVER = 'smtp.gmail.com'
+        self.APP_MAIL_PORT = 465
+        self.APP_MAIL_USE_SSL = True
+        self.APP_MAIL_USERNAME = 'stomatacounter@gmail.com'
+        self.APP_MAIL_PASSWORD = ''  # Set this in .epidermal!
+
+        # MongoDB Config
+        self.APP_MONGODB_DB = 'epidermal'
+        self.APP_MONGODB_HOST = 'localhost'
+        self.APP_MONGODB_PORT = 27017
 
         # Local overloads
         if config_filepath is not None:
@@ -55,8 +76,9 @@ class Config:
             for f in config_fields:
                 setattr(self, f, self.load_value(reader, f, getattr(self, f)))
 
-    def get_fields(self):
-        return [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith('__')]
+    def get_fields(self, prefix=''):
+        return [attr for attr in dir(self)
+                if not callable(getattr(self, attr)) and not attr.startswith('__') and attr.startswith(prefix)]
 
     def load_value(self, reader, field_name, default_value):
         if reader.has_option('Epidermal', field_name):
@@ -77,6 +99,13 @@ class Config:
     def print_values(self):
         for f in self.get_fields():
             print '%s = %s' % (f, getattr(self, f))
+
+    def set_app_config(self, app):
+        app.debug = (self.debug_flask > 0)
+        app_fields = self.get_fields(prefix='APP_')
+        for f in app_fields:
+            app.config[f[4:]] = getattr(self, f)
+
 
 config = Config()
 

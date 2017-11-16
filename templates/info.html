@@ -34,7 +34,7 @@
                     </form>
                     {% endif %}
                     <form action="/delete/{{ id }}" method=post>
-                        <input type=submit value="Delete">
+                        <input type=submit value="Delete" {% if readonly %}disabled{% endif %}>
                     </form>
                 </div>
             </div>

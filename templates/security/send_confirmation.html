@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Login</title>
+{% endblock %}
+
+{% block content %}
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="container">
+        <div class="col-md-8">
+          {% from "security/_macros.html" import render_field_with_errors, render_field %}
+          {% include "security/_messages.html" %}
+          <h1>Resend confirmation instructions</h1>
+          <form action="{{ url_for_security('send_confirmation') }}" method="POST" name="send_confirmation_form">
+            {{ send_confirmation_form.hidden_tag() }}
+            {{ render_field_with_errors(send_confirmation_form.email) }}
+            {{ render_field(send_confirmation_form.submit) }}
+          </form>
+        </div>
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}
