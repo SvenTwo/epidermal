@@ -15,7 +15,7 @@
             &lt;&lt; Back to <a href="/dataset/{{ dataset_id }}">Image list</a>
             <span class="float-right">
                 <a href="/info/{{ prev_id }}">Prev &lt;&lt;</a>
-                &nbsp;{{ sample_index }} / {{ sample_count }}&nbsp;
+                &nbsp;{{ sample_index + 1 }} / {{ sample_count }}&nbsp;
                 <a href="/info/{{ next_id }}">&gt;&gt; Next</a>
             </span>
         </p>
@@ -54,6 +54,24 @@
                 </div>
             {% endif %}
         {% endfor %}
+
+        <h3>Image quality properties:</h3>
+        <table id="info_table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k, v in info_table %}
+                    <tr>
+                        <td>{{ k }}</td>
+                        <td>{{ v }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
       {{ super() }}
     </div> <!-- /container -->

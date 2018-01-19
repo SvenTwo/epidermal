@@ -2,13 +2,13 @@
 
 {% block head %}
     {{ super() }}
-    <title>Stomata annotation for {{ filename }}</title>
+    <title>Stomata annotation for {{ name }}</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
 {% endblock %}
 
 {% block content %}
     <div class="container" style="margin:0px">
-        <h1>{{ filename }}</h1>
+        <h3>Annotate {{ name }}</h3>
 
         <div class="row">
             <div class="col-md-6">
@@ -26,12 +26,15 @@
                 <form action="/info/{{ id }}" method=get>
                     <input type="submit" value="Cancel">
                 </form>
+                <form action="/delete/{{ id }}?annotate=1{% if is_differential %}&differential=1{% endif %}" method=post>
+                    <input type=submit value="Delete" {% if readonly %}disabled{% endif %}>
+                </form>
             </div>
             <div class="col">
                 <div class="float-right">
                     <p>
                         <a class="navigate_dataset" href="/annotate/{{ prev_id }}{% if is_differential %}?differential=1{% endif %}">Prev &lt;&lt;</a>
-                        &nbsp;{{ sample_index }} / {{ sample_count }}&nbsp;
+                        &nbsp;{{ sample_index + 1 }} / {{ sample_count }}&nbsp;
                         <a class="navigate_dataset" href="/annotate/{{ next_id }}{% if is_differential %}?differential=1{% endif %}">&gt;&gt; Next</a>
                     </p>
                 </div>

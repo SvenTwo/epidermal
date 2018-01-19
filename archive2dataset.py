@@ -177,12 +177,12 @@ def archive2dataset():
 def dbpos2extpos(pos):
     return (pos['x'], pos['y'])
 
-def db2patches(output_path):
+def db2patches(output_path, train_label=None):
     # All human annotations in DB converted to a training set
     n_angles = 8
     angles = np.linspace(0, 360, num=n_angles, endpoint=False)
     extract_size = (256, 256)  # wdt, hgt
-    annotated_samples = db.get_human_annotated_samples()
+    annotated_samples = db.get_human_annotated_samples(train_label=train_label)
     print 'Extracting patches from %d images to %s...' % (len(annotated_samples), output_path)
     n = 0
     for s in tqdm(annotated_samples):
@@ -232,7 +232,7 @@ def import_karl_labels():
         shutil.copyfile(fn_full, fn_target)
         sample = db.add_sample(os.path.basename(fn_target), size=im.size, dataset_id=dataset_id)
         sample_id = sample['_id']
-        db.set_human_annotation(sample_id, db.get_default_user()['_id'], pos_db, margin=32)
+        db.set_human_annotation(sample_id, None, pos_db, margin=32)
         print 'http://0.0.0.0:9000/info/%s' % str(sample_id)
 
     print train_path

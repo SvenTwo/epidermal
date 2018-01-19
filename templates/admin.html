@@ -44,6 +44,7 @@
                         <th>Samples</th>
                         <th>Human annotations</th>
                         <th>Date added</th>
+                        <th>Owner</th>
                         <th>Tags</th>
                     </tr>
                 </thead>
@@ -54,6 +55,7 @@
                             <td>{{ item.sample_count }}</td>
                             <td>{{ item.human_annotation_count }}</td>
                             <td>{{ item.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ item.user.email }}</td>
                             <td>
                                 {% for tag in item.tags %}
                                     <a class="btn btn-secondary text-white">{{ tag }}&nbsp;

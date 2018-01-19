@@ -5,13 +5,16 @@ $(document).ready(function() {
     });
 } );
 
-$("#upload_image").change(function(){
-         document.getElementById("upload_image_form").submit();
- });
-
 var del_dataset = function(datasete_name){
     if (confirm('Really delete dataset ' + datasete_name + '?'))
     {
         document.getElementById('del_dataset').submit();
     }
+};
+
+
+// In case we need to remember this dataset
+if (getURLParam('new') === 'true') {
+    user_datasets.pushUnique(dataset_id);
+    Cookies.set('datasets', user_datasets);
 }

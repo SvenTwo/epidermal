@@ -6,6 +6,7 @@ import db
 import json
 from bson.objectid import ObjectId
 from webapp_base import set_error, pop_last_error, error_redirect
+from webapp_users import get_current_user_id
 
 annotations = Blueprint('annotations', __name__, template_folder='templates')
 
@@ -16,6 +17,7 @@ def annotate(sid):
     sample_id = ObjectId(sid)
     sample_entry = db.get_sample_by_id(sample_id)
     dataset_id = sample_entry['dataset_id']
+    name = sample_entry['name']
     readonly = db.is_readonly_dataset_id(dataset_id)
     sample_index, sample_count, prev_sample_id, next_sample_id = db.get_sample_index(dataset_id, sample_id)
     # Unknown entry?
@@ -40,7 +42,8 @@ def annotate(sid):
                            error=pop_last_error(), height=sample_entry['size'][1], width=sample_entry['size'][0],
                            annotations=annotations_json, margin=96, dataset_id=str(dataset_id),
                            sample_index=sample_index, sample_count=sample_count, prev_id=str(prev_sample_id),
-                           next_id=str(next_sample_id), is_differential=is_differential, readonly=readonly)
+                           next_id=str(next_sample_id), is_differential=is_differential, readonly=readonly,
+                           name=name)
 
 
 # Save annotations
@@ -66,7 +69,7 @@ def save_annotations(sid):
     annotations = json.loads(request.form['annotations'].strip())
     margin = int(request.form['margin'].strip())
     print 'Saving annotations.', sid, margin, annotations
-    db.set_human_annotation(sample_id, db.get_default_user(), annotations, margin, base_annotations=base_annotations)
+    db.set_human_annotation(sample_id, get_current_user_id(), annotations, margin, base_annotations=base_annotations)
     # Forward either to info page or to annotation of next un-annotated entry in DB if found
     annotate_next = ("save_and_continue" in request.form)
     if annotate_next:

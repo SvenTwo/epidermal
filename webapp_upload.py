@@ -7,8 +7,9 @@ from config import config
 from flask import request, redirect
 from werkzeug.utils import secure_filename
 from zipfile import ZipFile
-from webapp_base import set_error, error_redirect
+from webapp_users import get_current_user_id
 from PIL import Image
+from webapp_base import error_redirect, set_error
 
 # Upload
 def upload_file(dataset_id):
@@ -21,13 +22,14 @@ def upload_file(dataset_id):
     basename, ext = os.path.splitext(secure_filename(file.filename))
     filename = basename + ext
     # Generate dataset if needed
-    if dataset_id is None:
-        dataset_id = db.add_dataset(name=filename)['_id']
+    is_new_dataset = (dataset_id is None)
+    if is_new_dataset:
+        dataset_id = db.add_dataset(name=filename, user_id=get_current_user_id())['_id']
     # Handle according to type
     if ext in config.archive_extensions:
-        return upload_archive(dataset_id, file, filename)
+        return upload_archive(dataset_id, file, filename, is_new_dataset=is_new_dataset)
     elif ext in config.image_extensions:
-        return upload_image(dataset_id, file, filename)
+        return upload_image(dataset_id, file, filename, is_new_dataset=is_new_dataset)
     else:
         return error_redirect('Invalid or disallowed file type.')
 
@@ -45,7 +47,7 @@ def make_unique_server_image_filename(filename):
     return full_fn
 
 
-def upload_archive(dataset_id, file, _filename):
+def upload_archive(dataset_id, file, _filename, is_new_dataset):
     zipf = ZipFile(file.stream, 'r')
     print 'ZIPF:'
     for nfo in zipf.infolist():
@@ -74,10 +76,11 @@ def upload_archive(dataset_id, file, _filename):
             if os.path.isfile(full_fn):
                 os.remove(full_fn)
     set_error('%d images added.' % n_added)
-    return redirect('/dataset/%s' % str(dataset_id))
+    ds_url_suffix = '?new=true' if is_new_dataset else ''
+    return redirect('/dataset/%s' % str(dataset_id) + ds_url_suffix)
 
 
-def upload_image(dataset_id, imfile, filename):
+def upload_image(dataset_id, imfile, filename, is_new_dataset):
     # Make unique filename
     full_fn = make_unique_server_image_filename(filename)
     # Save it
@@ -86,7 +89,8 @@ def upload_image(dataset_id, imfile, filename):
     entry = add_uploaded_image(dataset_id, full_fn, filename)
     # Redirect to file info
     #return redirect('/info/%s' % str(entry['_id']))
-    return redirect('/dataset/%s' % str(dataset_id))
+    ds_url_suffix = '?new=true' if is_new_dataset else ''
+    return redirect('/dataset/%s' % str(dataset_id) + ds_url_suffix)
 
 
 def add_uploaded_image(dataset_id, full_fn, filename):

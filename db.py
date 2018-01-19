@@ -22,7 +22,10 @@ samples = epidermal_db['samples']
 
 def get_dataset_info(s):
     # Add sample counts for dataset
-    s['sample_count'] = samples.count({'dataset_id': s['_id']})
+    if s is not None:
+        s['sample_count'] = samples.count({'dataset_id': s['_id']})
+        user_id = s.get('user_id')
+        s['user'] = None if user_id is None else get_user_by_id(user_id)
     return s
 
 
@@ -30,30 +33,32 @@ def get_datasets(deleted=False):
     return [get_dataset_info(s) for s in datasets.find({'deleted': deleted})]
 
 
+def get_datasets_by_user(user_id):
+    return [get_dataset_info(s) for s in datasets.find({'deleted': False, 'user_id': user_id})]
+
+
 def get_dataset_by_id(dataset_id):
-    return datasets.find_one({'_id': dataset_id})
+    return get_dataset_info(datasets.find_one({'_id': dataset_id}))
 
 
 def get_dataset_by_name(dataset_name, deleted=False):
-    return datasets.find_one({'name': dataset_name, 'deleted': deleted})
+    return get_dataset_info(datasets.find_one({'name': dataset_name, 'deleted': deleted}))
 
 
 def get_example_dataset():
-    return datasets.find_one({ 'tags': { '$in': ["examples"] }, 'deleted': False })
+    return get_dataset_info(datasets.find_one({ 'tags': { '$in': ["examples"] }, 'deleted': False }))
 
 
 def is_readonly_dataset(dataset):
-    print 'is_readonly_dataset', dataset
     return "examples" in dataset['tags']
 
 
 def is_readonly_dataset_id(dataset_id):
-    print 'is_readonly_dataset_id', dataset_id
     return is_readonly_dataset(get_dataset_by_id(dataset_id))
 
 
-def add_dataset(name):
-    dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': []}
+def add_dataset(name, user_id=None):
+    dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': [], 'user_id': user_id}
     dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id
     return dataset_record
 
@@ -73,6 +78,10 @@ def add_dataset_tag(dataset_id, new_tag):
 
 def remove_dataset_tag(dataset_id, tag_name):
     datasets.update({'_id': dataset_id}, {"$pull": {'tags': tag_name}}, upsert=False)
+
+
+def set_dataset_user(dataset_id, user_id):
+    datasets.update({'_id': dataset_id}, {"$set": {'user_id': user_id}}, upsert=False)
 
 
 # Fix dataset date added where it's missing
@@ -117,14 +126,20 @@ def get_processed_samples(dataset_id=None):
     query = {'processed': True, 'error': False}
     if dataset_id is not None:
         query['dataset_id'] = dataset_id
-    return list(samples.find(query))
+    return sorted(list(samples.find(query)), key=lambda x: x['name'])
 
 
-def get_human_annotated_samples(dataset_id=None):
-    query = {'annotated': True}
-    if dataset_id is not None:
-        query['dataset_id'] = dataset_id
-    return list(samples.find(query))
+def get_human_annotated_samples(dataset_id=None, train_label=None):
+    if train_label is not None:
+        result = []
+        for dataset in datasets.find({'tags': {'$in': [train_label]}, 'deleted': False}):
+            result += get_human_annotated_samples(dataset_id=dataset['_id'])
+    else:
+        query = {'annotated': True}
+        if dataset_id is not None:
+            query['dataset_id'] = dataset_id
+        result = list(samples.find(query))
+    return result
 
 
 def get_human_unannotated_samples(dataset_id=None):
@@ -221,6 +236,11 @@ def fix_sample_date_added():
         samples.update({'_id': s['_id']}, {"$set": {'date_added': datetime.now()}}, upsert=False)
 
 
+# Set image quality measures
+def set_image_measures(sample_id, image_measures):
+    samples.update({'_id': sample_id}, {"$set": image_measures}, upsert=False)
+
+
 # Human annotations #
 #####################
 human_annotations = epidermal_db['human_annotations']
@@ -234,7 +254,7 @@ def get_human_annotations(sample_id):
     def resolve(annotation):
         user = get_user_by_id(annotation['user_id'])
         if user is not None:
-            annotation['user_name'] = ['name']
+            annotation['user_name'] = user['email']
         return annotation
     return [resolve(s) for s in human_annotations.find({'sample_id': sample_id})]
 
@@ -332,25 +352,11 @@ def stat_machine_annotations():
 
 # Users #
 #########
-users = epidermal_db['users']
-# 'name' (str): Username
-
-
-def get_default_user():
-    user = users.find_one({'name': 'human'})
-    if user is None:
-        user = add_user('human')
-    return user
-
-
-def add_user(name):
-    user_record = {'name': name}
-    user_record['_id'] = users.insert_one(user_record).inserted_id
-    return user_record
-
+user = epidermal_db['user']
+# 'email' (str): User email
 
 def get_user_by_id(user_id):
-    return users.find_one({'_id': user_id})
+    return user.find_one({'_id': user_id})
 
 
 # Models #
@@ -361,7 +367,7 @@ models = epidermal_db['models']
 
 
 def get_or_add_model(model_name, margin):
-    model = users.find_one({'name': model_name})
+    model = models.find_one({'name': model_name})
     if model is None:
         model = add_model(model_name, margin)
     return model
@@ -405,7 +411,11 @@ def print_annotation_table():
 
 # Test
 if __name__ == '__main__':
-    delete_all_machine_annotations()
+    stat_machine_annotations()
+    #delete_all_machine_annotations()
+    #for dataset in get_datasets():
+    #    if dataset.get('user'):
+    #        print dataset['name'], dataset['user']['email']
     # count_human_annotations()
     # count_machine_annotations()
     # stat_machine_annotations()

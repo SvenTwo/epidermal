@@ -20,14 +20,29 @@ import io
 import numpy as np
 from math import sqrt
 from itertools import chain
+from webapp_samples import info_table_entries
+from scipy import stats
 
 
 data_export = Blueprint('data_export', __name__, template_folder='templates')
 
 
+export_fields = (
+    ('Name', 'name'),
+    ('Status', 'status'),
+    ('Dataset', 'dataset_name'),
+    ('Manual_count', 'human_position_count'),
+    ('Automatic_count', 'machine_position_count'),
+    ('Human distance', 'human_distance'),
+    ('Machine distance', 'machine_distance'),
+    ('Machine hopkins', 'machine_hopkins')) + info_table_entries
+export_names = [e[0] for e in export_fields]
+export_keys = [e[1] for e in export_fields]
+
+
 def export_generator(samples, yield_header=True):
     if yield_header:
-        yield 'Name,Status,Dataset,Manual_count,Automatic_count,Human distance,Machine distance,Machine hopkins\n'
+        yield ','.join(export_names) + '\n'
     for s in samples:
         if s.get('machine_position_count'):
             s['machine_distance'] = 1.0 / sqrt(float(s['machine_position_count']))
@@ -39,15 +54,8 @@ def export_generator(samples, yield_header=True):
             status = 'QUEUED'
         else:
             status = 'OK'
-        yield ','.join([s['name'],
-                        status,
-                        str(s.get('dataset_name')),
-                        str(s.get('human_position_count')),
-                        str(s.get('machine_position_count')),
-                        str(s.get('human_distance')),
-                        str(s.get('machine_distance')),
-                        str(s.get('machine_hopkins'))
-                        ]) + '\n'
+        s['status'] = status
+        yield ','.join([str(s.get(k)) for k in export_keys]) + '\n'
 
 
 def get_all_samples(dataset_id, dataset_info=None):
@@ -84,7 +92,7 @@ def dataset_export_correlation(dataset_id_str):
     valid = [s for s in finished if s.get('human_position_count') is not None and s.get('machine_position_count') is not None]
     hu = np.array([s['human_position_count'] for s in valid])
     ma = np.array([s['machine_position_count'] for s in valid])
-    sns.regplot(y=hu, x=ma)
+    sns.jointplot(y=hu, x=ma, kind="reg")
     ax = plt.gca()
     ax.set_ylabel('Human stomata count')
     ax.set_xlabel('Automatic stomata count')

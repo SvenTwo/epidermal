@@ -19,12 +19,12 @@ def imagelist2lmdb(image_root, imagelist_filename, lmdb_filename):
         raise RuntimeError('Error generating LMDB.')
     print 'LMDB created at %s' % lmdb_filename
 
-def retrain(output_path=None):
+def retrain(output_path=None, train_label=None):
     # Prepare data
     exec_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'cnn'))
     if output_path is None:
         output_path = gen_new_output_path()
-        db2patches(output_path)
+        db2patches(output_path, train_label=train_label)
         patches2filelist(output_path)
     for dset in ('train', 'val', 'test'):
         imagelist_filename = os.path.join(output_path, dset + '.txt')
@@ -64,10 +64,12 @@ def launch_network_retrain():
     os.system(' '.join(cmd))
 
 if __name__ == '__main__':
-    #retrain('/data/epidermal_train/DS_2017_10_21_20_46')
-    retrain()
-    convert_epi1()
-    # Restart worker process
-    send_restart_signal()
-    # Retrain done
-    os.remove(retrain_signal_filename)
+    db2patches(gen_new_output_path(), train_label='train')
+    if False:
+        #retrain('/data/epidermal_train/DS_2017_10_21_20_46')
+        retrain(train_label='train')
+        convert_epi1()
+        # Restart worker process
+        send_restart_signal()
+        # Retrain done
+        os.remove(retrain_signal_filename)

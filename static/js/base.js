@@ -17,3 +17,28 @@ Array.prototype.removeIf = function(callback) {
         }
     }
 };
+
+Array.prototype.pushUnique = function (it){
+    if(-1 === this.indexOf(it)) { this.push(it); }
+};
+
+var getURLParam = function(name) {
+    var urlPars = decodeURIComponent(window.location.search.substring(1)).split('&');
+    for (var i = 0; i < urlPars.length; ++i) {
+        var nameVal = urlPars[i].split('=');
+        if (nameVal[0] === name) {
+            return nameVal[1];
+        }
+    }
+};
+
+
+// Init cookie-based dataset list to be added to user if he registers/logs in afterwards
+var user_datasets = Cookies.getJSON('datasets');
+if (user_datasets === undefined) {
+    user_datasets = [];
+}
+
+$("#upload_image").change(function(){
+         document.getElementById("upload_image_form").submit();
+ });

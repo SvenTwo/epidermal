@@ -22,9 +22,9 @@
     <div class="container">
         <div class="col-md-8">
             <h2>Upload</h2>
-            <form action="/dataset/new" method=post enctype=multipart/form-data>
+            <form action="/dataset/new" method=post enctype=multipart/form-data id="upload_image_form">
                 <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
-                <p><input type=file name=file><input type=submit value=Upload></p>
+                <p><input type=file name=file id="upload_image"></p>
             </form>
         </div>
         {{ super() }}

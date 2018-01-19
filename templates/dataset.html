@@ -10,7 +10,13 @@
     <div class="jumbotron">
       <div class="container">
         <!--<h1 class="display-3">Stomata Counter</h1>-->
+          {% if readonly %}
+          <h3>Example dataset</h3>
+          <p>These are example images that have been annotated automatically. If you want to try out StomataCounter,
+              your images should be scaled approximately like this.</p>
+          {% else %}
           <h3>Dataset <strong>{{ dataset_name }}</strong>.</h3>
+          {% endif %}
           <div class="col-md-3 float-md-right">
               <div class="dropdown">
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -20,7 +26,10 @@
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
                     {% if not readonly %}
-                    <a class="dropdown-item" href="javascript:del_dataset('{{ dataset_name }}')"><strong>Delete dataset</strong></a>
+                        {% if (not dataset_user) and (user.email) %}
+                            <a class="dropdown-item" href="/claim_dataset/{{ dataset_id }}">Claim dataset</a>
+                        {% endif %}
+                        <a class="dropdown-item" href="javascript:del_dataset('{{ dataset_name }}')"><strong>Delete dataset</strong></a>
                     {% endif %}
                 </div>
               </div>
@@ -58,12 +67,15 @@
 
             {% if finished %}
             <div class="col-md-12">
+                {% if not readonly %}
                 <h2>Processed files</h2>
+                {% endif %}
                     <p>Click an image name to view the results or annotate images. Click a column header to sort the table.</p>
-                <table class="table table-striped" id="sample_list"><thead><tr><td>Image</td><td>Manual</td><td>Automatic</td><td>Distance</td><td>Hopkins</td><td>Date added</td></tr></thead>
+                <table class="table table-striped" id="sample_list"><thead><tr><td>#</td><td>Image</td><td>Manual</td><td>Automatic</td><td>Distance</td><td>Hopkins</td><td>Date added</td></tr></thead>
                 <tbody>
                 {% for item in finished %}
                     <tr>
+                        <td>{{ item.index + 1 }}</td>
                         <td><a href="/info/{{ item._id }}">{{ item.filename }}</a></td>
                         <td>{{ item.human_position_count }}</td>
                         <td>{{ item.machine_position_count }}</td>
@@ -94,5 +106,6 @@
 
 {% block tailjs %}
     {{ super() }}
-     <script src="/static/js/dataset.js?v=2"></script>
+    <script>var dataset_id = "{{ dataset_id }}";</script>
+     <script src="/static/js/dataset.js?v=5"></script>
 {% endblock %}

@@ -6,8 +6,8 @@ from config import config
 from webapp_base import base as app_base
 from webapp_admin import admin
 from webapp_export import data_export
-from webapp_users import users
-from webapp_user_datasets import user_datasets, setup_user
+from webapp_users import users, setup_user
+from webapp_user_datasets import user_datasets
 from webapp_examples import examples
 from webapp_annotations import annotations
 from webapp_datasets import datasets
@@ -32,4 +32,4 @@ setup_user(app)
 
 # Start flask app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8996)
+    app.run(host='0.0.0.0', port=8995)
