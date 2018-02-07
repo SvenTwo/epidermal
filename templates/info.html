@@ -22,7 +22,7 @@
 
         <div class="row form-group">
             <div class="col-md-6">
-                <p><span class="lead">Status:</span>&nbsp;&nbsp;{{ info_string }}</p>
+                <p><span class="lead">Status:</span> {{ info_string|safe }}</p>
                 <div>
                     <span class="lead">Actions:</span>&nbsp;&nbsp;
                     <form action="/annotate/{{ id }}" method=post>

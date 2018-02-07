@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Individual sample info pages
 
-from flask import Blueprint, redirect, render_template, request
+from flask import Blueprint, redirect, render_template, request, Markup
 import db
 from bson.objectid import ObjectId
 from webapp_base import set_error, pop_last_error, error_redirect
@@ -35,7 +35,7 @@ def show_info(sid):
     if sample_entry is None:
         return error_redirect('Unknown entry: "%s".' % str(sample_id))
     # Allow fixing of machine annotation? Only if not human-annotated and there is a machine annotation with stomata
-    can_annotate_diff = (not sample_entry['annotated']) and (sample_entry['machine_position_count'])
+    can_annotate_diff = (not sample_entry.get('annotated')) and (sample_entry.get('machine_position_count'))
     # Determine data
     refresh = False
     filename = sample_entry['filename']
@@ -49,7 +49,7 @@ def show_info(sid):
             info_table.append((info_name, info_value))
     annotations = []
     if sample_entry['error']:
-        info_string = 'Error: ' + sample_entry['error_string']
+        info_string = Markup('Error: <pre>' + sample_entry['error_string'] + '</pre>')
     elif not sample_entry['processed']:
         info_string = 'Processing...'
         refresh = True
@@ -76,7 +76,7 @@ def show_info(sid):
         if positions is not None:
             an['info_string'] += ' %d stomata' % len(positions)
         annotations += [an]
-    annotations = reversed(annotations)
+    annotations = list(reversed(annotations))
     if not has_image_output:
         annotations += [{'image_filename': 'images/' + filename, 'title': 'Input image', 'info_string': ''}]
     return render_template("info.html", id=sid, name=name, dataset_id=str(dataset_id), info_string=info_string,

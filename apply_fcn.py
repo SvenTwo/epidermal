@@ -20,8 +20,10 @@ def init_model_transformer(net):
     net.transformer = transformer
     return transformer
 
-def load_model(iter, model_name, train_name, fc8_suffix, input_size):
-    model_fn = os.path.join(config.src_path, 'cnn', 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
+def load_model(iter, model_name, train_name, fc8_suffix, input_size, model_id):
+    basename = train_name + '_iter_' + str(iter) + '_fcn.caffemodel'
+    #model_fn = os.path.join(config.src_path, 'cnn', 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
+    model_fn = os.path.join(config.src_path, 'cnn', str(model_id), 'out', basename)
     proto_fn_fcn = os.path.join(config.src_path, 'cnn', model_name + 'fcn.prototxt')
     caffe.set_mode_gpu()
     caffe.set_device(config.worker_gpu_index)
@@ -63,6 +65,7 @@ def process_image(net, image):
 def process_image_file(net, image_filename_full, heatmap_filename_full):
     image = caffe.io.load_image(image_filename_full)
     probs = process_image(net, image)
+    print ('Probs shape %s' % str(probs.shape)),
     np.save(heatmap_filename_full, probs)
 
 def rgb2gray(rgb):
@@ -97,26 +100,11 @@ def plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filen
     #plt.imshow(hsv)
     #plt.show()
 
-def load_latest_model():
+
+def load_model_by_record(model):
     iter = 5000
     model_name = 'alexnet'
     train_name = 'alexnetftc'
     fc8_suffix = 'stoma'
     input_size = (2048, 2048)
-    return load_model(iter, model_name, train_name, fc8_suffix, input_size)
-
-if __name__ == '__main__':
-    image_folder = os.path.join(config.data_path, 'Pb_09_01_16_No_xy_Archive')
-    heatmap_folder = os.path.join(config.data_path, 'epi_heatmaps')
-    #image_filename = 'VT_DCK_09_R3_B_A1.jpg'
-
-    net = load_latest_model()
-    for image_filename in os.listdir(image_folder):
-        if image_filename.lower().endswith('.jpg'):
-            print ('%s...' % image_filename),
-            image_filename_full = os.path.join(image_folder, image_filename)
-            heatmap_filename_full = os.path.join(heatmap_folder, image_filename + '.npy')
-            heatmap_image_filename_full = os.path.join(heatmap_folder, image_filename)
-            process_image_file(net, image_filename_full, heatmap_filename_full)
-            plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
-            print 'done.'
+    return load_model(iter, model_name, train_name, fc8_suffix, input_size, model_id=model['_id'])

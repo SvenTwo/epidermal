@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-ssh -R 11089:localhost:7900 -N vm
+sudo iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 8000
+sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8000

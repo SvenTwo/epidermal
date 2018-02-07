@@ -3,7 +3,6 @@
 
 import time
 import os
-from apply_fcn import load_latest_model, process_image_file, plot_heatmap
 from config import config
 import db
 import numpy as np
@@ -13,10 +12,11 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import imread
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
-from apply_fcn import plot_heatmap
+
 
 prob_threshold = 2.0
 prob_area_threshold = 1.0
+
 
 def detect_peaks(image):
     """
@@ -49,6 +49,7 @@ def detect_peaks(image):
     detected_peaks = local_max ^ eroded_background
 
     return detected_peaks
+
 
 def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_contour=False, do_peaks=True):
     # Load heatmap + image
@@ -109,6 +110,7 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
         plt.imshow(heatmap_image2)
         plt.show()
     return positions
+
 
 def compute_stomata_positions_for_sample(sample_id, plot=False):
     machine_annotations = db.get_machine_annotations(sample_id)
