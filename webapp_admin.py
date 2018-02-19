@@ -6,7 +6,7 @@ from functools import wraps
 from flask import render_template, request, Response, Blueprint, jsonify, redirect
 from config import config
 import db
-from webapp_base import pop_last_error, set_error
+from webapp_base import pop_last_error, set_error, set_notice
 from bson.objectid import ObjectId
 
 admin = Blueprint('admin', __name__, template_folder='templates')
@@ -17,12 +17,14 @@ def check_auth(username, password):
     """
     return username == config.admin_username and password == config.admin_password
 
+
 def authenticate():
     """Sends a 401 response that enables basic auth"""
     return Response(
     'Could not verify your access level for that URL.\n'
     'You have to login with proper credentials', 401,
     {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 
 def requires_admin(f):
     @wraps(f)
@@ -33,6 +35,14 @@ def requires_admin(f):
         return f(*args, **kwargs)
     return decorated
 
+
+status_ids = (
+    ('Image worker', 'worker'),
+    ('Secondary image worker', 'sec_worker'),
+    ('Network trainer', 'trainer'),
+)
+
+
 @admin.route('/admin')
 @requires_admin
 def admin_page():
@@ -41,9 +51,15 @@ def admin_page():
     datasets = db.get_datasets()
     enqueued = db.get_unprocessed_samples()
     models = db.get_models(details=True)
+    model_id_to_name = {m['_id']: m['name'] for m in models}
+    secondary_items = db.get_queued_samples()
+    enqueued2 = [(model_id_to_name.get(item['model_id'], '???'), db.get_sample_by_id(item['sample_id'])['filename'])
+                 for item in secondary_items]
+    enqueued2 = sorted(enqueued2, key=lambda item: item[0])
+    status = [(status_name, db.get_status(status_id)) for status_name, status_id in status_ids]
     return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations,
-                           datasets=datasets, enqueued=enqueued, status=db.get_status('worker'), error=pop_last_error(),
-                           models=models)
+                           datasets=datasets, enqueued=enqueued, status=status, error=pop_last_error(),
+                           models=models, enqueued2=enqueued2)
 
 @admin.route('/tag/add', methods=['POST'])
 @requires_admin
@@ -105,12 +121,5 @@ def admin_retrain():
                        train_tag=tag_name,
                        scheduled_primary=is_primary,
                        status=db.model_status_scheduled)
-    set_error('Model training scheduled.')
+    set_notice('Model training scheduled.')
     return redirect('/model/' + str(rec['_id']))
-
-#    if os.path.isfile(retrain_log_filename):
-#        log = open(retrain_log_filename, 'rt').read().strip()
-#        log = filter(lambda x: x in string.printable, log)
-#    else:
-#        log = 'No logfile found.'
-#    return render_template('model.html', log=log, error=pop_last_error())

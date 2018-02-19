@@ -4,7 +4,7 @@
 from flask import Blueprint, redirect, render_template, request, Markup
 import db
 from bson.objectid import ObjectId
-from webapp_base import set_error, pop_last_error, error_redirect
+from webapp_base import set_error, pop_last_error, error_redirect, set_notice
 
 
 samples = Blueprint('samples', __name__, template_folder='templates')
@@ -101,7 +101,7 @@ def delete_entry(str_id):
     if readonly:
         set_error('Dataset is protected.')
     elif db.delete_sample(id):
-        set_error('Item deleted.')
+        set_notice('Item deleted.')
     else:
         set_error('Could not delete item.')
     # Redirect: To next sample in set if it exists. Otherwise to the dataset page.

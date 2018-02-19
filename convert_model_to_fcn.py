@@ -8,8 +8,8 @@ import os
 import numpy as np
 from config import config
 
-def convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale):
-    cnn_path = os.path.join(config.src_path, 'cnn')
+def convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale, model_id):
+    cnn_path = os.path.join(config.src_path, 'cnn', str(model_id))
     os.chdir(cnn_path)
     model_fn = os.path.join(cnn_path, 'out', train_name + '_iter_' + str(iter) + '.caffemodel')
     proto_fn_orig = os.path.join(cnn_path, model_name + '.prototxt')
@@ -48,14 +48,14 @@ def convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_gra
     print 'saving to ', out_fn
     net_full_conv.save(out_fn)
 
-def convert_epi1():
+def convert_epi1(model_id):
     iter = 5000
     model_name = 'alexnet'
     train_name = 'alexnetftc'
     fc_suffix = ''
     fc8_suffix = 'stoma'
     flatten_grayscale = False
-    convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale)
+    convert_fcn(iter, model_name, train_name, fc_suffix, fc8_suffix, flatten_grayscale, model_id=model_id)
 
 if __name__ == '__main__':
     convert_epi1()

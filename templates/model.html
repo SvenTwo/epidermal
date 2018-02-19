@@ -8,13 +8,46 @@
 {% block content %}
     <div class="jumbotron">
       <div class="container">
-        <h2>Retraining network</h2>
+        <h2>Model info for {{ name }}</h2>
       </div>
+          <div class="col-md-3 float-md-right">
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Model operations
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="/enqueue_images/{{ model_id }}">Schedule all images</a>
+                </div>
+              </div>
+          </div>
     </div>
 
     <div class="container">
-        <p>Retrain log:</p>
-        <p>{{ log }}</p>
+
+        <div class="col-md-12">
+            <h3>Parameters</h3>
+            <table id="parameter_list" class="table table-striped" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for k, v in model_data %}
+                        <tr>
+                            <td><strong>{{ k }}</strong></td>
+                            <td>{{ v }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-12">
+            <h3>Training log:</h3>
+            <p><pre>{{ log }}</pre></p>
+        </div>
 
         {{ super() }}
     </div> <!-- /container -->

@@ -12,6 +12,7 @@ from webapp_examples import examples
 from webapp_annotations import annotations
 from webapp_datasets import datasets
 from webapp_samples import samples
+from webapp_model import bp_model
 
 
 app = Flask(__name__)
@@ -26,6 +27,7 @@ app.register_blueprint(examples)
 app.register_blueprint(annotations)
 app.register_blueprint(datasets)
 app.register_blueprint(samples)
+app.register_blueprint(bp_model)
 
 setup_user(app)
 

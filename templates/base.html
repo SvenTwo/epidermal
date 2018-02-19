@@ -71,11 +71,11 @@
                   </li>
               </ul>
         </nav>
-        {% if error %}
-            <div class="alert alert-danger">
-                <strong>Error: </strong> {{ error }}
+        {% for msgpre, msg, msgclass in error %}
+            <div class="alert alert-{{ msgclass }}">
+                <strong>{{ msgpre }}: </strong> {{ msg }}
             </div>
-        {% endif %}
+        {% endfor %}
 
         {% block content %}
             <hr>

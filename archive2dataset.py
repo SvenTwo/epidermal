@@ -177,12 +177,16 @@ def archive2dataset():
 def dbpos2extpos(pos):
     return (pos['x'], pos['y'])
 
-def db2patches(output_path, train_label=None):
+def db2patches(output_path, train_label=None, sample_limit=None):
     # All human annotations in DB converted to a training set
     n_angles = 8
     angles = np.linspace(0, 360, num=n_angles, endpoint=False)
     extract_size = (256, 256)  # wdt, hgt
     annotated_samples = db.get_human_annotated_samples(train_label=train_label)
+    n_annotated_samples = len(annotated_samples)
+    if sample_limit is not None and n_annotated_samples > sample_limit:
+        print 'Reducing from %d to sample limit %d...' % (n_annotated_samples, sample_limit)
+        annotated_samples = np.random.choice(annotated_samples, sample_limit, replace=False)
     print 'Extracting patches from %d images to %s...' % (len(annotated_samples), output_path)
     n = 0
     for s in tqdm(annotated_samples):

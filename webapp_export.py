@@ -114,6 +114,38 @@ def dataset_export_all():
                     headers={"Content-Disposition":
                                  "attachment;filename=%s" % dataset_export_name})
 
+
+def export_model_comparison_ds(samples, yield_header, models):
+    if yield_header:
+        header_fields = ['Name', 'Dataset', 'Manual_count'] + [m['name'] for m in models]
+        yield ','.join(header_fields)
+    model_to_index = {m['_id']: i for i, m in enumerate(models)}
+    for sample in samples:
+        base_fields = 'name', 'dataset_name', 'human_position_count'
+        base_values = [str(sample.get(f, '')) for f in base_fields]
+        model_counts = [''] * len(models)
+        annotations = db.get_all_model_machine_annotations(sample_id=sample['_id'])
+        for annotation in annotations:
+            idx = model_to_index.get(annotation['model_id'])
+            if idx is not None:
+                model_counts[idx] = str(len(annotation['positions']))
+        yield ','.join(base_values + model_counts) + '\n'
+
+
+@data_export.route('/export_model_comparison')
+@requires_admin
+def export_model_comparison():
+    models = db.get_models(status=db.model_status_trained)
+    all_datasets = [export_model_comparison_ds(get_all_samples(dataset['_id']), not i, models)
+                    for i, dataset in enumerate(db.get_datasets())]
+    results = chain(*all_datasets)
+    dataset_export_name, _ext = os.path.splitext(secure_filename('export_model_comparison.csv'))
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition":
+                                 "attachment;filename=%s" % dataset_export_name})
+
+
 # Test
 if __name__ == '__main__':
     for i, dataset in enumerate(db.get_datasets()):

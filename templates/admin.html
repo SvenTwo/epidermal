@@ -17,6 +17,8 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item" href="/export_all">Export all to CSV</a>
+                    <a class="dropdown-item" href="/export_model_comparison">Export model comparison to CSV</a>
+                    <a class="dropdown-item" href="/enqueue_all_images">Enqueue images for all secondary models</a>
                 </div>
               </div>
           </div>
@@ -27,6 +29,9 @@
             <ul>
                 <li><p><strong>Total samples:</strong> {{ num_images }}</p></li>
                 <li><p><strong>Total annotations:</strong> {{ num_human_annotations }}</p></li>
+                {% for status_name, status_value in status %}
+                    <li><p><strong>{{ status_name }} status:</strong> <emph>{{ status_value }}</emph></p></li>
+                {% endfor %}
             </ul>
         </div>
       <div class="row">
@@ -69,14 +74,20 @@
             <a href="javascript:addDataset()">Add dataset...</a>
        </div>
         <div class="col-md-4 mt-4">
-            <h2>Enqueued ({{ enqueued|length }})</h2>
+            <h2>Primary queue ({{ enqueued|length }})</h2>
             <ul>
             {% for item in enqueued %}
                 <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
             {% endfor %}
             </ul>
-            <p>Queue status: <emph>{{ status }}</emph></p>
-          <!-- <p><a class="btn btn-secondary" href="#" role="button">View details »</a></p> -->
+       </div>
+        <div class="col-md-4 mt-4">
+            <h2>Secondary queue ({{ enqueued2|length }})</h2>
+            <ul>
+            {% for emodel,eimage in enqueued2 %}
+                <li>({{ emodel }}) {{ eimage }}</li>
+            {% endfor %}
+            </ul>
        </div>
         <div class="col-md-12">
             <h2>Models</h2>
@@ -88,7 +99,6 @@
                         <th>Date added</th>
                         <th>Margin</th>
                         <th>Annotations</th>
-                        <th>Operations</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,7 +109,6 @@
                             <td>{{ model.date_added }}</td>
                             <td>{{ model.margin }}</td>
                             <td>{{ model.machine_annotation_count }}</td>
-                            <td>TODO</td>
                         </tr>
                     {% endfor %}
                 </tbody>

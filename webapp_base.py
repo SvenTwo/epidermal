@@ -5,16 +5,27 @@ from flask import request, redirect, Blueprint, render_template
 
 base = Blueprint('base', __name__, template_folder='templates')
 
-# Error handling
-base.epi_last_error = None
-def set_error(msg): base.epi_last_error = msg
+# Errors and notices handling
+base.epi_last_messages = []
+
+
+def set_error(msg):
+    base.epi_last_messages.append(('Error', msg, 'danger'))
+
+
+def set_notice(msg):
+    base.epi_last_messages.append(('Notice', msg, 'info'))
+
+
 def error_redirect(msg):
     set_error(msg)
     return redirect(request.url)
+
+
 def pop_last_error():
-    last_error = base.epi_last_error
-    base.epi_last_error = None
-    return last_error
+    last_messages = base.epi_last_messages
+    base.epi_last_messages = []
+    return last_messages
 
 
 # Main page

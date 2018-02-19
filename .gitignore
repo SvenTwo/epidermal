@@ -97,3 +97,4 @@ out/
 retrain.log
 *.signal
 cnn/out
+cnn/

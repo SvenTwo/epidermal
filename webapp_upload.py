@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 from zipfile import ZipFile
 from webapp_users import get_current_user_id
 from PIL import Image
-from webapp_base import error_redirect, set_error
+from webapp_base import error_redirect, set_error, set_notice
 
 # Upload
 def upload_file(dataset_id):
@@ -75,7 +75,7 @@ def upload_archive(dataset_id, file, _filename, is_new_dataset):
             # Cleanup invalid
             if os.path.isfile(full_fn):
                 os.remove(full_fn)
-    set_error('%d images added.' % n_added)
+    set_notice('%d images added.' % n_added)
     ds_url_suffix = '?new=true' if is_new_dataset else ''
     return redirect('/dataset/%s' % str(dataset_id) + ds_url_suffix)
 

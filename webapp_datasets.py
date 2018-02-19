@@ -4,7 +4,7 @@
 from flask import Blueprint, redirect, request, render_template
 import db
 from bson.objectid import ObjectId
-from webapp_base import set_error, pop_last_error
+from webapp_base import set_error, pop_last_error, set_notice
 from webapp_upload import upload_file
 from webapp_users import get_current_user_id
 from math import sqrt
@@ -38,7 +38,7 @@ def delete_dataset(dataset_id_str):
         set_error('Dataset is protected.')
         return redirect('/dataset/' + str(dataset_info['_id']))
     db.delete_dataset(dataset_id)
-    set_error('Dataset "%s" deleted.' % dataset_info['name'])
+    set_notice('Dataset "%s" deleted.' % dataset_info['name'])
     return redirect('/')
 
 # Main overview page within a dataset

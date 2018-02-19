@@ -33,7 +33,10 @@ def process_images(net, model):
         unprocessed_samples = db.get_unprocessed_samples()
     else:
         unprocessed_samples = db.get_queued_samples(model_id=model_id)
-    for sample in unprocessed_samples:
+    for qsample in unprocessed_samples:
+        if not is_primary_model:
+            db.unqueue_sample(queue_item_id=qsample['_id'])
+        sample = db.get_sample_by_id(qsample['sample_id'])
         image_filename = sample['filename']
         set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
         image_filename_full = os.path.join(config.server_image_path, image_filename)
@@ -89,7 +92,7 @@ def worker_process(secondary=False):
             while model is None:
                 models = db.get_models(details=False, status=db.model_status_trained)
                 for cmodel in models:
-                    if len(db.get_queued_samples(model_id=cmodel['_id'])):
+                    if len(list(db.get_queued_samples(model_id=cmodel['_id']))):
                         model = cmodel
                         break
                 if model is None:

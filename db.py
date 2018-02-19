@@ -155,10 +155,11 @@ def get_human_unannotated_samples(dataset_id=None):
 
 
 def get_samples(dataset_id=None):
-    query = {}
     if dataset_id is not None:
-        query['dataset_id'] = dataset_id
-    return sorted(list(samples.find(query)), key=lambda x: x['name'])
+        query = {'dataset_id': dataset_id}
+        return sorted(list(samples.find(query)), key=lambda x: x['name'])
+    else:
+        return samples.find({})
 
 
 # Get next sample in dataset, starting from prev_sample_id
@@ -253,13 +254,20 @@ sample_queue = epidermal_db['sample_queue']
 # 'model_id' (id): Link into model collection
 
 
-def get_queued_samples(model_id):
-    return sample_queue.find({'model_id': model_id})
+def get_queued_samples(model_id=None):
+    query = {}
+    if model_id is not None:
+        query['model_id'] = model_id
+    return sample_queue.find(query)
 
 
 def queue_sample(sample_id, model_id):
     rec = {'sample_id': sample_id, 'model_id': model_id}
     sample_queue.update(rec, rec, upsert=True)
+
+
+def unqueue_sample(queue_item_id):
+    sample_queue.delete_one({'_id': queue_item_id})
 
 
 # Human annotations #
@@ -324,14 +332,24 @@ machine_annotations = epidermal_db['machine_annotations']
 def get_machine_annotations(sample_id, model_id=None):
     if model_id is None:
         model_id = get_primary_model()['_id']
-    return [s for s in machine_annotations.find({'sample_id': sample_id, 'model_id': model_id})]
+    return list(machine_annotations.find({'sample_id': sample_id, 'model_id': model_id}))
+
+
+def get_all_model_machine_annotations(sample_id):
+    return list(machine_annotations.find({'sample_id': sample_id}))
+
+
+def get_machine_annotations_for_model(model_id):
+    return machine_annotations.find({'model_id': model_id})
 
 
 def add_machine_annotation(sample_id, model_id, heatmap_filename, heatmap_image_filename, positions, margin,
                            is_primary_model):
+    annotation_query = {'sample_id': sample_id, 'model_id': model_id}
     annotation_record = {'sample_id': sample_id, 'model_id': model_id, 'heatmap_filename': heatmap_filename,
                          'heatmap_image_filename': heatmap_image_filename, 'positions': positions, 'margin': margin}
-    annotation_record['_id'] = machine_annotations.insert_one(annotation_record).inserted_id
+    machine_annotations.update(annotation_query, annotation_record, upsert=True)
+    annotation_record['_id'] = machine_annotations.find_one(annotation_query)
     if is_primary_model:
         set_primary_machine_annotation(sample_id, positions)
     return annotation_record
@@ -439,6 +457,13 @@ def delete_model(model_id):
     models.delete_one({'_id': model_id})
 
 
+def set_model_parameters(model_id, new_settings):
+    result = models.update_one({'_id': model_id}, {"$set": new_settings}, upsert=False)
+    print 'result', result
+    if not result.modified_count:
+        raise RuntimeError('set_model_parameters: Model ID %s not found.' % str(model_id))
+
+
 def get_model_by_id(model_id):
     return models.find_one({'_id': model_id})
 
@@ -462,7 +487,7 @@ def set_primary_model(model_id):
 
 
 def set_model_status(model_id, new_status):
-    assert new_status in {model_status_scheduled, model_status_training, model_status_trained}
+    assert new_status in {model_status_scheduled, model_status_training, model_status_trained, model_status_failed}
     models.update_one({'_id': model_id}, {"$set": {'status': new_status}}, upsert=False)
 
 
