@@ -15,3 +15,6 @@
 form {
     display: inline-block;
 }
+.unqueue-btn {
+    cursor: pointer;
+}

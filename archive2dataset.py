@@ -27,12 +27,13 @@ def ensure_path_exists(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
-def get_sample_filename(pos, angle, extract_size, output_path, img_name):
+def get_sample_filename(pos, angle, extract_size, output_path, img_name, sample_id=None):
     # Compose filename of sample from source and extraction position and rotation
-    return os.path.join(output_path, '%s_%04d_%04d_%03d_%03d_%03d.jpg' % (img_name, pos[0], pos[1], int(angle), extract_size[0], extract_size[1]))
+    return os.path.join(output_path, '%s_%s_%04d_%04d_%03d_%03d_%03d.jpg'
+                        % (str(sample_id), img_name, pos[0], pos[1], int(angle), extract_size[0], extract_size[1]))
 
-def extract_sample(img, pos, angle, output_path, img_name, extract_size):
-    filename = get_sample_filename(pos, angle, extract_size, output_path, img_name)
+def extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_id=None):
+    filename = get_sample_filename(pos, angle, extract_size, output_path, img_name, sample_id=sample_id)
     M = cv2.getRotationMatrix2D(tuple(pos), angle, 1)
     M[0, 2] -= pos[0] - extract_size[0] / 2
     M[1, 2] -= pos[1] - extract_size[1] / 2
@@ -40,17 +41,17 @@ def extract_sample(img, pos, angle, output_path, img_name, extract_size):
     cv2.imwrite(filename, sample)
     #print 'Extracted sample %s.' % filename
 
-def extract_target_positions(img, allpos, output_path, img_name, angles, extract_size):
+def extract_target_positions(img, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Extract all given positions at all angles
     ensure_path_exists(output_path)
     n = 0
     for pos in allpos:
         for angle in angles:
-            extract_sample(img, pos, angle, output_path, img_name, extract_size)
+            extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_id=sample_id)
             n += 1
     return n
 
-def extract_distractor_positions(img, allpos, output_path, img_name, angles, extract_size):
+def extract_distractor_positions(img, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Extract from positions not close to any given positions at all angles
     ensure_path_exists(output_path)
     n_distractors = len(allpos)
@@ -77,12 +78,12 @@ def extract_distractor_positions(img, allpos, output_path, img_name, angles, ext
             continue
         # Sample here
         for angle in angles:
-            extract_sample(img, pos, angle, output_path, img_name, extract_size)
+            extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_id=sample_id)
         n_distractors -= 1
         n += 1
     return n
 
-def extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size):
+def extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Load image and extract both positive examples from pos as well as negative examples from elsewhere
     # Store images into output_path/target and output_path/distractor
     n = 0
@@ -93,8 +94,14 @@ def extract_positions(img_filename, allpos, output_path, img_name, angles, extra
     #    cv2.circle(img, tuple(pos), 128, (255, 255, 0), thickness=3)
     #    cv2.circle(img, tuple(pos), 172, (127, 127, 0), thickness=3)
     # Extract positions
-    n += extract_target_positions(img, allpos, os.path.join(output_path, 'target'), img_name, angles, extract_size)
-    n += extract_distractor_positions(img, allpos, os.path.join(output_path, 'distractor'), img_name, angles, extract_size)
+    try:
+        n += extract_target_positions(img, allpos, os.path.join(output_path, 'target'), img_name, angles,
+                                      extract_size, sample_id=sample_id)
+        n += extract_distractor_positions(img, allpos, os.path.join(output_path, 'distractor'), img_name, angles,
+                                          extract_size, sample_id=sample_id)
+    except:
+        print 'Error extracting from %s' % img_filename
+        raise
     return n
 
 def plot_locations(img_filename, allpos, out_filename):
@@ -194,7 +201,7 @@ def db2patches(output_path, train_label=None, sample_limit=None):
         img_name = s['filename'].replace('.', '_')
         for annotation in db.get_human_annotations(s['_id']):
             allpos = [dbpos2extpos(p) for p in annotation['positions']]
-            n += extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size)
+            n += extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size, s['_id'])
     print '%d patches extracted.' % n
 
 def patches2filelist(output_path):

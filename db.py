@@ -247,11 +247,12 @@ def set_image_measures(sample_id, image_measures):
     samples.update({'_id': sample_id}, {"$set": image_measures}, upsert=False)
 
 
-# Sample queue for non-primary models #
-#######################################
+# Sample queue for non-primary models and image validation runs #
+#################################################################
 sample_queue = epidermal_db['sample_queue']
 # 'sample_id' (id): Link into samples collection
 # 'model_id' (id): Link into model collection
+# 'validation_model_id' (id): Link into model collection for validation set queue items
 
 
 def get_queued_samples(model_id=None):
@@ -266,8 +267,55 @@ def queue_sample(sample_id, model_id):
     sample_queue.update(rec, rec, upsert=True)
 
 
+def queue_validation(train_model_id, validation_model_id):
+    rec = {'validation_model_id': validation_model_id, 'model_id': train_model_id}
+    sample_queue.update(rec, rec, upsert=True)
+
+
 def unqueue_sample(queue_item_id):
     sample_queue.delete_one({'_id': queue_item_id})
+
+
+
+# Image validation runs #
+#########################
+validation_results = epidermal_db['validation_results']
+# 'train_model_id' (id): Evaluated model
+# 'validation_model_id' (id): Model to which the evaluation dataset belongs
+# 'image_subset' (str): Which dataset (train, val, test)
+# 'confusion_matrix' (list(2) of list(2)): Count of [true_label][prediction] with 0=distractor, 1=target
+# 'worst_predictions' (dict('Distractor', 'Target') of list of [sample_name, prediction_value]): Top 25 worst
+#                                                                                               (mis-)classifications
+
+def save_validation_results(train_model_id, validation_model_id, image_subset, confusion_matrix, worst_predictions):
+    query = {
+        'train_model_id': train_model_id,
+        'validation_model_id': validation_model_id,
+        'image_subset': image_subset
+    }
+    results = dict(query)
+    results['confusion_matrix'] = confusion_matrix
+    results['worst_predictions'] = worst_predictions
+    validation_results.update(query, results, upsert=True)
+
+
+def get_all_validation_results(train_model_id=None, validation_model_id=None):
+    q = {}
+    if train_model_id is not None:
+        q['train_model_id'] = train_model_id
+    if validation_model_id is not None:
+        q['validation_model_id'] = validation_model_id
+    return list(validation_results.find(q))
+
+
+def get_validation_results(train_model_id, validation_model_id, image_subset):
+    return validation_results.find_one({'train_model_id': train_model_id, 'validation_model_id': validation_model_id,
+                                        'image_subset': image_subset})
+
+
+def get_validation_results_by_id(val_id):
+    return validation_results.find_one({'_id': val_id})
+
 
 
 # Human annotations #
@@ -343,13 +391,17 @@ def get_machine_annotations_for_model(model_id):
     return machine_annotations.find({'model_id': model_id})
 
 
+def remove_machine_annotations_for_model(model_id):
+    return machine_annotations.delete_many({'model_id': model_id})
+
+
 def add_machine_annotation(sample_id, model_id, heatmap_filename, heatmap_image_filename, positions, margin,
                            is_primary_model):
     annotation_query = {'sample_id': sample_id, 'model_id': model_id}
     annotation_record = {'sample_id': sample_id, 'model_id': model_id, 'heatmap_filename': heatmap_filename,
                          'heatmap_image_filename': heatmap_image_filename, 'positions': positions, 'margin': margin}
     machine_annotations.update(annotation_query, annotation_record, upsert=True)
-    annotation_record['_id'] = machine_annotations.find_one(annotation_query)
+    annotation_record['_id'] = machine_annotations.find_one(annotation_query)['_id']
     if is_primary_model:
         set_primary_machine_annotation(sample_id, positions)
     return annotation_record
@@ -368,6 +420,11 @@ def set_primary_machine_annotation(sample_id, positions):
 
 
 def update_machine_annotation_positions(sample_id, machine_annotation_id, positions, is_primary_model):
+    print 'update_machine_annotation_positions'
+    print 'sample_id', sample_id
+    print 'machine_annotation_id', machine_annotation_id
+    print 'positions', positions
+    print 'is_primary_model', is_primary_model
     machine_annotations.update({'_id': machine_annotation_id}, {"$set": {'positions': positions}}, upsert=False)
     if is_primary_model:
         samples.update({'_id': sample_id}, {"$set": {'machine_position_count': len(positions)}}, upsert=False)
@@ -454,6 +511,8 @@ def add_model(model_name, margin, sample_limit=None, train_tag='train', schedule
 
 
 def delete_model(model_id):
+    if model_id is None:
+        raise RuntimeError('Invalid model.')
     models.delete_one({'_id': model_id})
 
 
@@ -470,6 +529,14 @@ def get_model_by_id(model_id):
 
 def get_model_by_name(model_name):
     return models.find_one({'name': model_name})
+
+
+def rename_model(old_model_name, new_model_name):
+    if models.find_one({'name': new_model_name}):
+        raise RuntimeError('Target name exists.')
+    result = models.update_one({'name': old_model_name}, {"$set": {'name': new_model_name}}, upsert=False)
+    if not result.modified_count:
+        raise RuntimeError('set_primary_model: Model ID %s not found.' % str(model_id))
 
 
 def get_primary_model():

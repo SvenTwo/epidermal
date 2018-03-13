@@ -53,8 +53,16 @@ def admin_page():
     models = db.get_models(details=True)
     model_id_to_name = {m['_id']: m['name'] for m in models}
     secondary_items = db.get_queued_samples()
-    enqueued2 = [(model_id_to_name.get(item['model_id'], '???'), db.get_sample_by_id(item['sample_id'])['filename'])
-                 for item in secondary_items]
+    enqueued2 = []
+    for item in secondary_items:
+        model_name = model_id_to_name.get(item['model_id'], '???')
+        if 'sample_id' in item:
+            target_name = db.get_sample_by_id(item['sample_id'])['filename']
+        elif 'validation_model_id' in item:
+            target_name = model_id_to_name.get(item['validation_model_id'], '?!?')
+        else:
+            target_name = '!!!'
+        enqueued2.append((model_name, target_name, str(item['_id'])))
     enqueued2 = sorted(enqueued2, key=lambda item: item[0])
     status = [(status_name, db.get_status(status_id)) for status_name, status_id in status_ids]
     return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations,
@@ -80,6 +88,14 @@ def tag_remove():
     tag_name = data['tag_name']
     db.remove_dataset_tag(dataset_id, tag_name)
     print 'Removed tag %s from %s' % (tag_name, dataset_id)
+    return jsonify('OK'), 200
+
+
+@admin.route('/unqueue/<queue_id_s>', methods=['POST'])
+@requires_admin
+def unqueue_validation(queue_id_s):
+    queue_id = ObjectId(queue_id_s)
+    db.unqueue_sample(queue_id)
     return jsonify('OK'), 200
 
 

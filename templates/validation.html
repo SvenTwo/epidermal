@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Image validation results</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Image validation for {{ train_name }} on {{ val_name }}</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="col-md-12">
+            <p>Negative predictions mean classified as distractor; positive predictions mean classified as stoma.</p>
+        </div>
+
+        {% for lbl, wp in worst_predictions.iteritems() %}
+            <div class="col-md-12">
+                <h3>Top misclassified {{ lbl }}</h3>
+                <div>
+                    {% for sample_name, pred in wp %}
+                        <figure class="figure">
+                            <img src="/image_sample/{{ train_id }}/{{ sample_name }}"
+                                 class="figure-img img-fluid rounded"
+                                 alt="Weakest classification sample.">
+                            <figcaption class="figure-caption"><strong>{{ pred }}</strong> {{ sample_name }}</figcaption>
+                        </figure>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}

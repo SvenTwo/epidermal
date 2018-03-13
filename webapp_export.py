@@ -118,7 +118,7 @@ def dataset_export_all():
 def export_model_comparison_ds(samples, yield_header, models):
     if yield_header:
         header_fields = ['Name', 'Dataset', 'Manual_count'] + [m['name'] for m in models]
-        yield ','.join(header_fields)
+        yield ','.join(header_fields) + '\n'
     model_to_index = {m['_id']: i for i, m in enumerate(models)}
     for sample in samples:
         base_fields = 'name', 'dataset_name', 'human_position_count'

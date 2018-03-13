@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import sys
 import subprocess
 import traceback
+from tqdm import tqdm
+import random
 
 from config import config
 from apply_fcn import load_model_by_record, process_image_file, plot_heatmap
@@ -25,57 +27,112 @@ def get_status(secondary=False):
     return db.get_status(status_id)
 
 
-def process_images(net, model):
+def process_primary_model(net, model):
     # Process all unprocessed samples
     model_id = model['_id']
-    is_primary_model = model['primary']
-    if is_primary_model:
-        unprocessed_samples = db.get_unprocessed_samples()
-    else:
-        unprocessed_samples = db.get_queued_samples(model_id=model_id)
+    unprocessed_samples = db.get_unprocessed_samples()
     for qsample in unprocessed_samples:
-        if not is_primary_model:
-            db.unqueue_sample(queue_item_id=qsample['_id'])
-        sample = db.get_sample_by_id(qsample['sample_id'])
-        image_filename = sample['filename']
-        set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
-        image_filename_full = os.path.join(config.server_image_path, image_filename)
-        if not os.path.isfile(image_filename_full):
-            db.set_sample_error(sample['_id'], 'File does not exist: "%s".' % image_filename_full)
-            continue
-        basename, ext = os.path.splitext(image_filename)
-        if not ext.lower() in config.image_extensions:
-            db.set_sample_error(sample['_id'], 'Unknown file extension "%s".' % ext)
-            continue
-        try:
-            # Lots of saving and loading here. TODO: Should be optimized to be done all in memory.
-            # Determine output file paths
-            heatmap_filename = os.path.join(net.name, basename + '_heatmap.npy')
-            heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
-            if not os.path.isdir(os.path.dirname(heatmap_filename_full)):
-                os.makedirs(os.path.dirname(heatmap_filename_full))
-            heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
-            heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
-            # Process image
-            process_image_file(net, image_filename_full, heatmap_filename_full)
-            plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
-            if 'imq_entropy' not in sample:
-                imq = get_image_measures(image_filename_full)
-                db.set_image_measures(sample['_id'], imq)
-            positions = [] # Computed later
-            machine_annotation = db.add_machine_annotation(sample['_id'], model_id, heatmap_filename,
-                                                           heatmap_image_filename, positions, net.margin,
-                                                           is_primary_model=is_primary_model)
-            # Count stomata
-            heatmap_image = plt.imread(heatmap_image_filename_full)
-            positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False)
-            db.update_machine_annotation_positions(sample['_id'], machine_annotation['_id'], positions,
-                                                   is_primary_model=is_primary_model)
-            plt.imsave(heatmap_image_filename_full, heatmap_image)
-            print 'Finished record.'
-        except:
-            error_string = traceback.format_exc()
-            db.set_sample_error(sample['_id'], "Processing error:\n" +str(error_string))
+        process_image_sample(net=net,
+                             model_id=model_id,
+                             sample_id=qsample['sample_id'],
+                             is_primary_model=True)
+
+
+def process_secondary_models(net, model):
+    # Process all unprocessed samples
+    model_id = model['_id']
+    unprocessed_samples = db.get_queued_samples(model_id=model_id)
+    for qsample in unprocessed_samples:
+        db.unqueue_sample(queue_item_id=qsample['_id'])
+        if 'sample_id' in qsample:
+            process_image_sample(net=net,
+                                 model_id=model_id,
+                                 sample_id=qsample['sample_id'],
+                                 is_primary_model=False)
+        elif 'validation_model_id' in qsample:
+            process_validation_set(net, model, db.get_model_by_id(qsample['validation_model_id']))
+        else:
+            print 'Invalid sample:', qsample
+
+
+# Process all training and validation images of a model training run
+def process_validation_set(net, net_model, validation_set_model, sample_limit=10000):
+    # List images
+    sample_path = os.path.join(config.train_data_path, str(validation_set_model['_id']), 'samples')
+    for subset in 'test', 'train':
+        set_status('Processing model %s %s set %s...' % (net_model['name'], subset, validation_set_model['name']))
+        imagelist_filename = os.path.join(sample_path, subset + '.txt')
+        image_list = [s.split(' ') for s in open(imagelist_filename, 'rt').read().splitlines()]
+        n_images = len(image_list)
+        if n_images > sample_limit:
+            image_list = random.sample(image_list, sample_limit)
+            n_images = sample_limit
+        confusion_matrix = [[0, 0], [0, 0]]
+        predictions = [{}, {}]
+        for i, (image_path, true_label_string) in tqdm(enumerate(image_list), total=len(image_list)):
+            set_status('Processing model %s %s set %s... (%d/%d)' % (net_model['name'], subset,
+                                                                     validation_set_model['name'],
+                                                                     i, n_images))
+            image_filename_full = os.path.join(sample_path, image_path)
+            probs = process_image_file(net, image_filename_full, crop=True, verbose=False)
+            prediction = int(probs.item() > 0)
+            true_label = int(true_label_string)
+            confusion_matrix[true_label][prediction] += 1
+            predictions[true_label][image_path] = probs.item()
+        print '%s %s %s confusion_matrix: %s' % (net_model['name'], subset, validation_set_model['name'],
+                                                 confusion_matrix)
+        # Get worst predictions for both classes
+        worst_predictions = {k: sorted(p.iteritems(), key=lambda i: i[1] * s)[:25]
+                             for p, s, k in zip(predictions, (-1, +1), ('Distractor', 'Target'))}
+        # Store all in DB
+        db.save_validation_results(train_model_id=net_model['_id'],
+                                   validation_model_id=validation_set_model['_id'],
+                                   image_subset=subset,
+                                   confusion_matrix=confusion_matrix,
+                                   worst_predictions=worst_predictions)
+
+
+def process_image_sample(net, model_id, sample_id, is_primary_model):
+    sample = db.get_sample_by_id(sample_id)
+    image_filename = sample['filename']
+    set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
+    image_filename_full = os.path.join(config.server_image_path, image_filename)
+    if not os.path.isfile(image_filename_full):
+        db.set_sample_error(sample['_id'], 'File does not exist: "%s".' % image_filename_full)
+        return
+    basename, ext = os.path.splitext(image_filename)
+    if not ext.lower() in config.image_extensions:
+        db.set_sample_error(sample['_id'], 'Unknown file extension "%s".' % ext)
+        return
+    try:
+        # Lots of saving and loading here. TODO: Should be optimized to be done all in memory.
+        # Determine output file paths
+        heatmap_filename = os.path.join(net.name, basename + '_heatmap.npy')
+        heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
+        if not os.path.isdir(os.path.dirname(heatmap_filename_full)):
+            os.makedirs(os.path.dirname(heatmap_filename_full))
+        heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
+        heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
+        # Process image
+        process_image_file(net, image_filename_full, heatmap_filename_full)
+        plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
+        if 'imq_entropy' not in sample:
+            imq = get_image_measures(image_filename_full)
+            db.set_image_measures(sample['_id'], imq)
+        positions = [] # Computed later
+        machine_annotation = db.add_machine_annotation(sample['_id'], model_id, heatmap_filename,
+                                                       heatmap_image_filename, positions, net.margin,
+                                                       is_primary_model=is_primary_model)
+        # Count stomata
+        heatmap_image = plt.imread(heatmap_image_filename_full)
+        positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False)
+        db.update_machine_annotation_positions(sample['_id'], machine_annotation['_id'], positions,
+                                               is_primary_model=is_primary_model)
+        plt.imsave(heatmap_image_filename_full, heatmap_image)
+        print 'Finished record.'
+    except:
+        error_string = traceback.format_exc()
+        db.set_sample_error(sample['_id'], "Processing error:\n" +str(error_string))
 
 
 EXITCODE_RESTART = 55
@@ -103,17 +160,17 @@ def worker_process(secondary=False):
         net = load_model_by_record(model)
         # Then find samples to process
         while True:
-            process_images(net, model)
-            # Did the primary model change?
-            if not secondary:
+            if secondary:
+                process_secondary_models(net, model)
+                # Secondary model: Always quit after processing is done; going back to model search.
+                break
+            else:
+                process_primary_model(net, model)
+                # Did the primary model change?
                 if db.get_primary_model()['_id'] != model['_id']:
                     break
                 set_status('Waiting for images...', secondary=secondary)
                 time.sleep(1)
-            else:
-                # Secondary model: Always quit after processing is done; going back to model search.
-                break
-
     finally:
         set_status('offline', secondary=secondary)
 

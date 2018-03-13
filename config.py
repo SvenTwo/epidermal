@@ -63,6 +63,9 @@ class Config:
         self.APP_MONGODB_HOST = 'localhost'
         self.APP_MONGODB_PORT = 27017
 
+        # For evaluation
+        self.plot_path = '/data2/epidermal/plots'
+
         # Local overloads
         if config_filepath is not None:
             self.load(config_filepath)

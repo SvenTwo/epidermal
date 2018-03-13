@@ -13,7 +13,15 @@ $(".add-tag-btn").click(function(){
           location.reload();
         });
     }
-})
+});
+
+$(".unqueue-btn").click(function(){
+    var unqueue_id = this.id.split('_')[1];
+    $.post( "/unqueue/" + unqueue_id, function( data ) {
+        var elem = document.getElementById("sample_queue_" + unqueue_id);
+        return elem.parentNode.removeChild(elem);
+    });
+});
 
 $(".rm-tag-btn").click(function(){
     var dsid = this.id.split('_');
@@ -25,4 +33,4 @@ $(".rm-tag-btn").click(function(){
           location.reload();
         });
     }
-})
+});

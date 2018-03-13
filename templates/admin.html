@@ -19,6 +19,7 @@
                     <a class="dropdown-item" href="/export_all">Export all to CSV</a>
                     <a class="dropdown-item" href="/export_model_comparison">Export model comparison to CSV</a>
                     <a class="dropdown-item" href="/enqueue_all_images">Enqueue images for all secondary models</a>
+                    <a class="dropdown-item" href="/enqueue_all_validation_sets">Schedule validation sets for all models</a>
                 </div>
               </div>
           </div>
@@ -84,8 +85,8 @@
         <div class="col-md-4 mt-4">
             <h2>Secondary queue ({{ enqueued2|length }})</h2>
             <ul>
-            {% for emodel,eimage in enqueued2 %}
-                <li>({{ emodel }}) {{ eimage }}</li>
+            {% for emodel,eimage,eid in enqueued2 %}
+                <li id="sample_queue_{{ eid }}">({{ emodel }}) {{ eimage }} <a class="unqueue-btn" id="unqueue_{{ eid }}">&#10006;</a></li>
             {% endfor %}
             </ul>
        </div>

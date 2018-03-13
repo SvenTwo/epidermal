@@ -2,7 +2,7 @@
 
 {% block head %}
     {{ super() }}
-    <title>Stomata Overview - Retraining</title>
+    <title>Stomata Overview - Model</title>
 {% endblock %}
 
 {% block content %}
@@ -17,12 +17,69 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item" href="/enqueue_images/{{ model_id }}">Schedule all images</a>
+                    <a class="dropdown-item" href="/enqueue_validation_sets/{{ model_id }}">Schedule all validation sets</a>
                 </div>
               </div>
           </div>
     </div>
 
     <div class="container">
+
+        <div class="col-md-12">
+            <h3>Validation results (for this model)</h3>
+            <table id="validation_results" class="table table-striped" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Image set</th>
+                        <th>True positive</th>
+                        <th>True negative</th>
+                        <th>False positive</th>
+                        <th>False negative</th>
+                        <th>Accuracy (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vr in validation_results %}
+                        <tr>
+                            <td><a href="/validation/{{ vr['_id'] }}"><strong>{{ vr['image_set'] }}</strong></a></td>
+                            <td>{{ vr['confusion_matrix'][1][1] }}</td>
+                            <td>{{ vr['confusion_matrix'][0][0] }}</td>
+                            <td>{{ vr['confusion_matrix'][0][1] }}</td>
+                            <td>{{ vr['confusion_matrix'][1][0] }}</td>
+                            <td>{{ vr['accuracy'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-12">
+            <h3>Validation results (for this dataset)</h3>
+            <table id="validation_results_ds" class="table table-striped" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>(Subset) Model</th>
+                        <th>True positive</th>
+                        <th>True negative</th>
+                        <th>False positive</th>
+                        <th>False negative</th>
+                        <th>Accuracy (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vr in validation_results_ds %}
+                        <tr>
+                            <td><a href="/validation/{{ vr['_id'] }}"><strong>{{ vr['model_name'] }}</strong></a></td>
+                            <td>{{ vr['confusion_matrix'][1][1] }}</td>
+                            <td>{{ vr['confusion_matrix'][0][0] }}</td>
+                            <td>{{ vr['confusion_matrix'][0][1] }}</td>
+                            <td>{{ vr['confusion_matrix'][1][0] }}</td>
+                            <td>{{ vr['accuracy'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <div class="col-md-12">
             <h3>Parameters</h3>
