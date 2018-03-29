@@ -73,6 +73,7 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
         peak_coords = np.nonzero(peaks)
         for c in zip(peak_coords[0], peak_coords[1]):
             thresh = probs[c[0], c[1]]
+            thresh_p = np.exp(thresh) / (np.exp(thresh) + np.exp(-thresh))
             pos = c
             radius = 3
             pos_zoomed = tuple(int(x * zoom + margin + zoom / 2) for x in pos)
@@ -80,7 +81,7 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
             positions += [pos_zoomed]
             cv2.circle(heatmap_image2, center=pos_zoomed, radius=radius_zoomed, color=(255, 255, 0), thickness=4)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(heatmap_image2, '%.1f' % thresh, pos_zoomed, font, 1.0, (127, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(heatmap_image2, '%.3f' % thresh_p, pos_zoomed, font, 1.0, (127, 255, 0), 2, cv2.LINE_AA)
 
     if do_contour:
         pthresh = (probs >= prob_threshold).astype(np.uint8).copy()

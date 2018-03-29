@@ -68,36 +68,42 @@ def train(model_id):
         imagelist_filename = os.path.join(output_path, dset + '.txt')
         sample_count = len(open(imagelist_filename, 'rt').read().splitlines())
         db.set_model_parameters(model_id, {dset + '_count': sample_count})
-        lmdb_filename = os.path.join(output_path, dset + '_lmdb')
-        mset_status('Preparing lmdb ' + dset)
-        imagelist2lmdb(output_path, imagelist_filename, lmdb_filename)
-        exec_lmdb_filename = os.path.join(exec_path, dset + '_lmdb')
-        mset_status('Linking lmdb ' + dset)
-        remake_symlink(lmdb_filename, exec_lmdb_filename)
-    # Prepare folder for processing
-    mset_status('Preparing model output')
-    os.chdir(exec_path)
-    for fnbase in 'alexnet', 'alexnetfcn', 'solver_alexnetftc', 'solver_alexnetscratch':
-        fn = fnbase + '.prototxt'
-        os.symlink(os.path.join(exec_base_path, fn), os.path.join(exec_path, fn))
-    cnn_output_path = os.path.join(exec_path, 'out')
-    real_cnn_output_path = os.path.join(output_path, 'cnn')
-    if not os.path.isdir(real_cnn_output_path):
-        os.makedirs(real_cnn_output_path)
-    remake_symlink(real_cnn_output_path, cnn_output_path)
-    # Run caffe!
-    mset_status('Run trainer')
-    caffe_cmd = os.path.join(config.caffe_path, 'tools', 'caffe')
-    cmd = [caffe_cmd, 'train', '--solver', 'solver_alexnetftc.prototxt', '--weights', config.caffe_train_baseweights] + config.caffe_train_options.split(' ')
-    print cmd
-    if subprocess.call(cmd):
-        raise RuntimeError('Error calling caffe.')
-    # Convert to fully convolutional network
-    mset_status('Convert to fully convolutional')
-    convert_epi1(model_id)
-    # Mark as done
-    mset_status('Set status')
-    db.set_model_status(model_id, db.model_status_trained)
+        if not model.get('dataset_only', False):
+            lmdb_filename = os.path.join(output_path, dset + '_lmdb')
+            mset_status('Preparing lmdb ' + dset)
+            imagelist2lmdb(output_path, imagelist_filename, lmdb_filename)
+            exec_lmdb_filename = os.path.join(exec_path, dset + '_lmdb')
+            mset_status('Linking lmdb ' + dset)
+            remake_symlink(lmdb_filename, exec_lmdb_filename)
+    # Dataset only? Then finish here.
+    if not model.get('dataset_only', False):
+        # Prepare folder for processing
+        mset_status('Preparing model output')
+        os.chdir(exec_path)
+        for fnbase in 'alexnet', 'alexnetfcn', 'solver_alexnetftc', 'solver_alexnetscratch':
+            fn = fnbase + '.prototxt'
+            os.symlink(os.path.join(exec_base_path, fn), os.path.join(exec_path, fn))
+        cnn_output_path = os.path.join(exec_path, 'out')
+        real_cnn_output_path = os.path.join(output_path, 'cnn')
+        if not os.path.isdir(real_cnn_output_path):
+            os.makedirs(real_cnn_output_path)
+        remake_symlink(real_cnn_output_path, cnn_output_path)
+        # Run caffe!
+        mset_status('Run trainer')
+        caffe_cmd = os.path.join(config.caffe_path, 'tools', 'caffe')
+        cmd = [caffe_cmd, 'train', '--solver', 'solver_alexnetftc.prototxt', '--weights', config.caffe_train_baseweights] + config.caffe_train_options.split(' ')
+        print cmd
+        if subprocess.call(cmd):
+            raise RuntimeError('Error calling caffe.')
+        # Convert to fully convolutional network
+        mset_status('Convert to fully convolutional')
+        convert_epi1(model_id)
+        # Mark as done
+        mset_status('Set status')
+        db.set_model_status(model_id, db.model_status_trained)
+    else:
+        mset_status('Set status')
+        db.set_model_status(model_id, db.model_status_dataset)
     mset_status('Finished')
 
 

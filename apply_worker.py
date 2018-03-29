@@ -34,15 +34,18 @@ def process_primary_model(net, model):
     for qsample in unprocessed_samples:
         process_image_sample(net=net,
                              model_id=model_id,
-                             sample_id=qsample['sample_id'],
+                             sample_id=qsample['_id'],
                              is_primary_model=True)
 
 
 def process_secondary_models(net, model):
     # Process all unprocessed samples
     model_id = model['_id']
-    unprocessed_samples = db.get_queued_samples(model_id=model_id)
-    for qsample in unprocessed_samples:
+    while True:
+        unprocessed_samples = list(db.get_queued_samples(model_id=model_id))
+        if not len(unprocessed_samples):
+            break
+        qsample = unprocessed_samples[0]
         db.unqueue_sample(queue_item_id=qsample['_id'])
         if 'sample_id' in qsample:
             process_image_sample(net=net,

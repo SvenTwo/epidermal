@@ -36,4 +36,11 @@ def overview():
 
 # Info page
 @base.route('/about')
-def about(): return render_template("about.html", error=pop_last_error())
+def about():
+    return render_template("about.html", error=pop_last_error())
+
+
+# Info page
+@base.route('/source')
+def source_redirect():
+    return redirect("https://github.com/SvenTwo/epidermal")

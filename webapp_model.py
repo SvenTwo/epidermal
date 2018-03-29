@@ -55,7 +55,8 @@ def enqueue_validation_sets_for_model(train_model_id):
     existing_results = db.get_all_validation_results(train_model_id=train_model_id)
     processed_val_model_ids = set([r['validation_model_id'] for r in existing_results if r['image_subset'] == 'train'])
     n = 0
-    for validation_model in db.get_models(details=False, status=db.model_status_trained):
+    for validation_model in db.get_models(details=False, status=db.model_status_dataset)\
+            + db.get_models(details=False, status=db.model_status_trained):
         if validation_model['_id'] not in processed_val_model_ids:
             db.queue_validation(train_model_id=train_model_id, validation_model_id=validation_model['_id'])
             n += 1
@@ -127,12 +128,13 @@ def validation_page(val_id_s):
     train_name = train_model['name']
     val_name = '%s (%s)' % (val_model['name'], val['image_subset'])
     worst_predictions = val['worst_predictions']
-    return render_template('validation.html', train_id=val['train_model_id'], train_name=train_name, val_name=val_name,
-                           worst_predictions=worst_predictions, error=pop_last_error())
+    return render_template('validation.html', val_id=val['validation_model_id'], train_name=train_name,
+                           val_name=val_name, worst_predictions=worst_predictions, error=pop_last_error())
 
 
 @bp_model.route('/image_sample/<train_id_s>/<path:sample_name>')
 @requires_admin
 def image_sample(train_id_s, sample_name):
     subpath = os.path.join(train_id_s, 'samples', sample_name)
+    print 'GETTING', subpath
     return send_from_directory(config.train_data_path, subpath)

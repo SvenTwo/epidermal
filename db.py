@@ -471,6 +471,7 @@ model_status_scheduled = 'scheduled'
 model_status_training = 'training'
 model_status_trained = 'trained'
 model_status_failed = 'failed'
+model_status_dataset = 'dataset'
 
 
 def get_or_add_model(model_name, margin):
@@ -498,14 +499,15 @@ def get_models(details=False, status=None):
 
 
 def add_model(model_name, margin, sample_limit=None, train_tag='train', scheduled_primary=False,
-              status=model_status_scheduled):
+              status=model_status_scheduled, dataset_only=False):
     model_record = {'name': model_name,
                     'margin': margin,
                     'primary': False,
                     'status': status,
                     'sample_limit': sample_limit,
                     'train_tag': train_tag,
-                    'scheduled_primary': scheduled_primary}
+                    'scheduled_primary': scheduled_primary,
+                    'dataset_only': dataset_only}
     model_record['_id'] = models.insert_one(model_record).inserted_id
     return model_record
 
@@ -536,7 +538,7 @@ def rename_model(old_model_name, new_model_name):
         raise RuntimeError('Target name exists.')
     result = models.update_one({'name': old_model_name}, {"$set": {'name': new_model_name}}, upsert=False)
     if not result.modified_count:
-        raise RuntimeError('set_primary_model: Model ID %s not found.' % str(model_id))
+        raise RuntimeError('rename_model: Old model %s not found.' % old_model_name)
 
 
 def get_primary_model():
@@ -554,7 +556,8 @@ def set_primary_model(model_id):
 
 
 def set_model_status(model_id, new_status):
-    assert new_status in {model_status_scheduled, model_status_training, model_status_trained, model_status_failed}
+    assert new_status in {model_status_scheduled, model_status_training, model_status_trained, model_status_failed,
+                          model_status_dataset}
     models.update_one({'_id': model_id}, {"$set": {'status': new_status}}, upsert=False)
 
 

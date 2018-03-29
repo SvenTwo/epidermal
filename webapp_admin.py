@@ -118,6 +118,7 @@ def admin_retrain():
         set_error('Train tag does not match any datasets.')
         return redirect('/admin')
     is_primary = (data.get('train_primary') == 'on')
+    dataset_only = (data.get('dataset_only') == 'on')
     train_sample_limit_s = data['train_sample_limit']
     if len(train_sample_limit_s):
         try:
@@ -136,6 +137,7 @@ def admin_retrain():
                        sample_limit=train_sample_limit,
                        train_tag=tag_name,
                        scheduled_primary=is_primary,
-                       status=db.model_status_scheduled)
+                       status=db.model_status_scheduled,
+                       dataset_only=dataset_only)
     set_notice('Model training scheduled.')
     return redirect('/model/' + str(rec['_id']))
