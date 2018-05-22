@@ -10,21 +10,24 @@
     <div class="jumbotron">
       <div class="container">
         <h1 class="display-3">Stomata Counter</h1>
-        <p>A tool to automatically estimate stomatal density from epidermal micrographs. Experimental web frontend. Running on my local machine; do not distribute.</p>
+        <p>A tool to automatically estimate stomatal density from epidermal micrographs. Experimental web frontend.</p>
       </div>
     </div>
     <div class="container">
     	<div class="col-md-8">
 		<h2>Welcome to StomataCounter!</h2>
-			<p>StomataCounter is a website and method for automatic detection of stomata from well-prepared micrographs of plant cuticles. StomataCounter uses a fully-convolutional neural network trained on over 4,700 micrographs from over 700 species to identify stomata. The training set of images was collected with SEM, differential interference contrast, and brightfield microscopy, and as such, is robust to these methods. Before collecting images to use with StomataCounter, please try out a few different imaging and sample preperation methods to find out what works best. As the axiom goes: junk in, junk out. We have found that 400x magnification with DIC microscopy of samples created from nail polish epidermal peels works well. To use the method, save your images as jpegs and upload a zip file of your dataset. Try to minimize file size when imaging - you don't need all those extra bytes to get a good image - to a few hundred kB. After uploading images, you can manually annotate them to get a sense of the error in your dataset. If the method performs poorly on your images, annotate the stomata and contact us. We may add your material to the training database and retrain the network.</p>
-			<p>I'm going to add some text here<\p>
+			<p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. To use the method, register for an acount and upload a jpeg or a zip file of jpegs. You can click the refresh button on your internet browser to monitor the progress of your job.</p>
+			<p>We recommend that you upload images that are sized between 1000 and 3000 pixels. Although the site will accomodate smaller or larger images, it performs best on images larger than 1000 pixels in either dimension.<\p>
+			<p>After your job has been completed, you may want to annotate stomata on some images to get an understanding of the error. There are two annotation modes, one where you select the location of each stomata in the image, and a second mode where you view StomataCounter's annotations and you can accept, reject, or modify them. Annotations are added or removed by clicking the image during annotation mode.</p>
+			<p>Before planning an experiment using StomataCounter, try uploading images of various sizes and qualities to the site to see what works. We have found that micrographs genereated from SEM, phase contrast, and DIC have enough contrast for the method to detect stomata. Brightfield images usually don't have enough contrast. If the method performs poorly on your images, annotate the stomata and contact us. We may add your material to the training database and retrain the network.</p>
+			<p> View examples in the examples tab to get an idea for what works.</p>
 		</div>
     </div>
     <div class="container">
         <div class="col-md-8">
             <h2>Upload</h2>
             <form action="/dataset/new" method=post enctype=multipart/form-data id="upload_image_form">
-                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. Size between 256x256 and 4096x4096.</p>
+                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. The minimum size is 256x256 and the maximum is 4096x4096. Images between 1000x1000 and 2000x2000 work the best.</p>
                 <p><input type=file name=file id="upload_image"></p>
             </form>
         </div>
