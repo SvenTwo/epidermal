@@ -41,6 +41,12 @@ def about():
 
 
 # Info page
+@base.route('/disclaimer')
+def disclaimer():
+    return render_template("disclaimer.html", error=pop_last_error())
+
+
+# Source code page
 @base.route('/source')
 def source_redirect():
     return redirect("https://github.com/SvenTwo/epidermal")

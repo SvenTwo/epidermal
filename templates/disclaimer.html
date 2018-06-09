@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Disclaimer</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Disclaimer</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <p>The information contained on http://www.stomata.science website (the "Service") is for general information purposes only.</p>
+
+            <p>INFORMATION AND FUNCTIONALITY ON THIS WEBSITE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF IMPLIED WARRANTIES, SO THE ABOVE EXCLUSION MAY NOT APPLY TO YOU.</p>
+
+<p>StomataCounter assumes no responsibility for errors or omissions in the contents on the Service.</p>
+
+<p>In no event shall StomataCounter be liable for any special, direct, indirect, consequential, or incidental damages or any damages whatsoever, whether in an action of contract, negligence or other tort, arising out of or in connection with the use of the Service or the contents of the Service. StomataCounter reserves the right to make additions, deletions, or modification to the contents on the Service at any time without prior notice.</p>
+
+<p>StomataCounter does not warrant that the website is free of viruses or other harmful components.</p>
+
+<p>http://www.stomata.science website may contain links to external websites that are not provided or maintained by or in any way affiliated with StomataCounter.</p>
+
+<p>Please note that the StomataCounter does not guarantee the accuracy, relevance, timeliness, or completeness of any information on these external websites.</p>
+
+<p>THE OWNERS OF THIS WEBSITE ARE NOT RESPONSIBLE FOR INFORMATION TRANSMITTED TO 3RD PARTY SERVICES USED ON OUR WEBSITES. THE OWNERS ARE NOT RESPONSIBLE FOR NON-ORIGINAL CONTENT ON OUR WEBSITES AND IS NOT RESPONSIBLE FOR ATTACKS OR EXPLOITS ORIGINATING FROM NON-ORIGINAL CONTENT ON OUR WEBSITES TARGETING YOUR BROWSER, PLUGINS, OR ANY OTHER SOFTWARE AFFECTED BY USE OF OUR WEBSITES.</p>
+        <p><small>This Disclaimer for StomataCounter is powered by TermsFeed</small></p>
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}

@@ -1,6 +1,7 @@
 $(document).ready(function() {
     $('#dataset_list').DataTable({
         paging: false,
+        order: [[ 3, "desc" ]]
     });
 } );
 
