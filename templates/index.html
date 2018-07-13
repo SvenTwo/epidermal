@@ -16,11 +16,121 @@
     <div class="container">
     	<div class="col-md-8">
 		<h2>Welcome to StomataCounter!</h2>
-			<p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. To use the method, register for an acount and upload a jpeg or a zip file of jpegs. You can click the refresh button on your internet browser to monitor the progress of your job.</p>
-			<p>We recommend that you upload images that are sized between 1000 and 3000 pixels. Although the site will accomodate smaller or larger images, it performs best on images larger than 1000 pixels in either dimension.<\p>
-			<p>After your job has been completed, you may want to annotate stomata on some images to get an understanding of the error. There are two annotation modes, one where you select the location of each stomata in the image, and a second mode where you view StomataCounter's annotations and you can accept, reject, or modify them. Annotations are added or removed by clicking the image during annotation mode.</p>
-			<p>Before planning an experiment using StomataCounter, try uploading images of various sizes and qualities to the site to see what works. We have found that micrographs genereated from SEM, phase contrast, and DIC have enough contrast for the method to detect stomata. Brightfield images usually don't have enough contrast. If the method performs poorly on your images, annotate the stomata and contact us. We may add your material to the training database and retrain the network.</p>
-			<p> View examples in the examples tab to get an idea for what works.</p>
+			<p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. You can read about how StomataCounter was developed and the tests we performed to validate StomataCounter's effectiveness in the <a href="https://doi.org/10.1101/327494">preprint</a>. We recommend you register an account with us so that you can return to your jobs after you leave the website.</p>
+        <h3>Instructions for using this site</h3>
+            <p>The simplest way to use StomataCounter is to upload a jpeg using the upload button below, refresh your browser on the Dataset page after a few moments, then export the results using the Dataset operations pulldown menu.</p>
+            <p>Most users will have several hundred images to measure and uploading zip files of jpegs is more convencient. You can add more zipfiles or individual images to a dataset by navigating to that dataset's page and following the instructions to add more images. Once StomataCounter has finished detecting and counting stomata, you should view the results of all or a set of images to determine how well the method performed. Click on an image to view the result. You should annotate 50 or 100 images (or whatever number you're comfortable with) and view the correlation of human to automatic stomata counts. This is done by clicking on the Dataset operations drop down menu and selecting "Export correlation graph".</p>
+            <p>Stomata annotations are added to an image by clicking on image in a dataset and clicking the annotate button. There are two annotation modes. Enter the basic annotation mode by clicking "Annotate" in the list of actions. In this mode, you'll have to add an annotation for each stomata by clicking once to add, and twice to remove. We provided a faster method of annotating using the "Annotate from automatic" annotation mode. In this mode, StomataCounter's best quess of where a stoma is located is provided as an annotation. You then choose to accept, reject, or modify annotations. The automatic annotation mode is a great time saver and you'll only spend a few seconds annotating each image.</p>
+            <p>When you are ready to download and analyze your output data, click on the "Export results as csv" in the Dataset operations drop down menu. Along with the results visible in the dataset table, each image is scored for nine image quality scores. These quality scores are very informative and can be helpful for you to filter results from low quality images. You should read more about these quality scores from PyImq in their original <a href="http://dx.doi.org/10.1038/srep28962">publication.</a></p>
+ 		<h3>Guidelines for optimizing your results</h3>
+			<p>StomataCounter was designed to minimize user interface with the analytical components of the method. Your control over the performance is largely determined by your choice of input images. Users should design a pilot experiment before generating a large collection of images to determine which microscopy technique and/or tissue preperation techniques will minimize count error. We recommend that users take the following actions:
+                <ul>
+                    <li>Collect sample images using different microscopy methods from the same tissues.</li>
+                    <li>Run images through StomataCounter.</li>
+                    <li>Establish a 'true' stomata count using the annotation feature.</li>
+                    <li>Regress image quality scores (automatically provided in output csv file) against log(precision).</li>
+                    <li>Regress human versus automatic counts.</li>
+                    <li>Choose the method that minimzes error and then image your reamining samples.</li>
+                </ul>
+                <p>If a large collection of images is already available and re-imaging is not feasible, we recommend the users take the following actions:</p>
+            <ul>
+                <li>Randomly sample 100 images. (If you're not sure how to randomly sample images, use the code below).</li>
+                <li>Upload the images to StomataCounter.</li>
+                <li>Annotate images to establish the 'true' count.</li>
+                <li>Explore image quality scores with against the log(precision) to determine a justifiable cut-off value for filtering images.</li>
+                <li>Discard images below the image quality cut-off value.</li>
+            </ul>
+            <p>If you do not wish to throw out images, please contact us and we will retrain the model and incorporate your 100 annotated images.</p>
+            <p>We have found that micrographs genereated from SEM, phase contrast, and DIC have enough contrast for the method to detect stomata. Brightfield images usually don't have enough contrast.</p>
+            <p>Here is some code that is useful for 1) randomly sampling images in a directory, and 2) evenly dividing images into zipfiles for upload. This code works in a linux environment. Insert your paths and file names where appropriate.</p>
+            <p>1) Randomly select 100 images in a directory</p>
+            <figure>
+                <figcaption>Navigate to the directory where the images are kept.</figcaption>
+                <pre>
+                    <code>
+                    cd /path/to/images
+                    </code>
+                </pre>
+            </figure>
+            <figure>
+                <figcaption>Genereate a list of all of the images (assuming they are jpegs).</figcaption>
+                <pre>
+                    <code>
+                    ls *.jpg > images_to_choose
+                    </code>
+                </pre>
+            </figure>
+            <figure>
+                <figcaption>Randomly sample 100 images.</figcaption>
+                <pre>
+                    <code>
+                    shuf -n 100 images_to_choose &gt; sample
+                    </code>
+                </pre>
+            </figure>
+            <figure>
+                <figcaption>Send those images to a zip file.</figcaption>
+                <pre>
+                    <code>
+                    zip -@ &lt; sample 100_image_sample.zip
+                    </code>
+                </pre>
+            </figure>
+            <figure>
+                <figcaption>You might want to move the files you’ll zip to another directory, so you don’t measure them twice (or not).</figcaption>
+                <pre>
+                    <code>
+                    mkdir measured_images
+                    xargs mv -t measured_images/ &lt; sample
+                    </code>
+                </pre>
+            </figure>
+                <p>Now, upload those images to StomataCounter and annotate them!</p>
+            <p>2) Divide a large set of images into smaller zipfiles for uploading.</p>
+            <figure>
+                <figcaption>Generate a list of images to zip.</figcaption>
+                <pre>
+                    <code>
+                    ls *.jpg > image_list
+                    </code>
+                </pre>
+            </figure>
+            <figure>
+                <figcaption>Split the larger list into smaller lists by size N. The output are files named xaa, xab, ...</figcaption>
+                <pre>
+                    <code>
+                    split -l N image_list
+                    </code>
+                </pre>
+            </figure>
+             <figure>
+                <figcaption>Archive the files in your lists. This can be put in a bash script with a loop.</figcaption>
+                <pre>
+                    <code>
+                    zip archive_1 -@ &lt; xaa    
+                    </code>
+                </pre>
+            </figure>
+                 
+            <p>Other useful code.</p>
+            <figure>
+                <figcaption>Obtain the dimensions of an image</figcaption>
+                <pre>
+                    <code>
+                    identify image.jpg
+                    </code>
+                </pre>    
+            </figure>
+            
+        <h3>Troubleshooting</h3>
+            <p>If StomataCounter is not performing well, or it is not uploading your zipfile, try taking these steps:</p>
+                <ul>
+                    <li>Resize your images between 1000 and 2000 pixels.</li>
+                    <li>Upload smaller zipfiles, the largest zipfile the uploader can handle is around 100MB.</li>
+                    <li>Use different filters on your micrscope to increase contrast.</li>
+                    <li>Reduce noise in your micrographs. The goal is to upload images where even an infant botanist could pick out a stoma!</li>
+                    <li>View examples in the examples tab to get an idea for what works.</li>
+                </ul>
 		</div>
     </div>
     <div class="container">
