@@ -13,7 +13,16 @@
         <p>A tool to automatically estimate stomatal density from epidermal micrographs. Experimental web frontend.</p>
       </div>
     </div>
-    <div class="container">
+   <div class="container">
+        <div class="col-md-8">
+            <h2>Upload</h2>
+            <form action="/dataset/new" method=post enctype=multipart/form-data id="upload_image_form">
+                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. The minimum size is 256x256 and the maximum is 4096x4096. Images between 1000x1000 and 2000x2000 work the best.</p>
+                <p><input type=file name=file id="upload_image"></p>
+            </form>
+        </div>
+        {{ super() }}
+    </div> <!-- /container -->   
     	<div class="col-md-8">
 		<h2>Welcome to StomataCounter!</h2>
 			<p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. You can read about how StomataCounter was developed and the tests we performed to validate StomataCounter's effectiveness in the <a href="https://doi.org/10.1101/327494">preprint</a>. We recommend you register an account with us so that you can return to your jobs after you leave the website.</p>
