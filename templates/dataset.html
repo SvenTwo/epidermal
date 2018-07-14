@@ -30,6 +30,7 @@
                             <a class="dropdown-item" href="/claim_dataset/{{ dataset_id }}">Claim dataset</a>
                         {% endif %}
                         <a class="dropdown-item" href="javascript:del_dataset('{{ dataset_name }}')"><strong>Delete dataset</strong></a>
+                        <a class="dropdown-item" href="/dataset/{{ dataset_id }}/rerun">Re-run stomata detection</a>
                     {% endif %}
                 </div>
               </div>

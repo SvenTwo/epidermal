@@ -105,6 +105,9 @@ def train(model_id):
         mset_status('Set status')
         db.set_model_status(model_id, db.model_status_dataset)
     mset_status('Finished')
+    # Set as primary model
+    if model.get('primary'):
+        db.set_primary_model(model_id)
 
 
 def run_daemon():

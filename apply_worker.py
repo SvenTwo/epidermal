@@ -17,6 +17,10 @@ from stoma_counter import compute_stomata_positions
 from image_measures import get_image_measures
 
 
+#default_scales = (1.0, 2.0, 3.0)
+default_scales = None
+
+
 def set_status(status_string, secondary=False):
     status_id = 'sec_worker' if secondary else 'worker'
     db.set_status(status_id, status_string)
@@ -77,7 +81,8 @@ def process_validation_set(net, net_model, validation_set_model, sample_limit=10
                                                                      validation_set_model['name'],
                                                                      i, n_images))
             image_filename_full = os.path.join(sample_path, image_path)
-            probs = process_image_file(net, image_filename_full, crop=True, verbose=False)
+            data = process_image_file(net, image_filename_full, crop=True, verbose=False)
+            probs = data['probs']
             prediction = int(probs.item() > 0)
             true_label = int(true_label_string)
             confusion_matrix[true_label][prediction] += 1
@@ -110,22 +115,24 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
     try:
         # Lots of saving and loading here. TODO: Should be optimized to be done all in memory.
         # Determine output file paths
-        heatmap_filename = os.path.join(net.name, basename + '_heatmap.npy')
+        heatmap_filename = os.path.join(net.name, basename + '_heatmap.npz')
         heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
         if not os.path.isdir(os.path.dirname(heatmap_filename_full)):
             os.makedirs(os.path.dirname(heatmap_filename_full))
         heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
         heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
         # Process image
-        process_image_file(net, image_filename_full, heatmap_filename_full)
+        data = process_image_file(net, image_filename_full, heatmap_filename_full, scales=default_scales)
         plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
         if 'imq_entropy' not in sample:
             imq = get_image_measures(image_filename_full)
             db.set_image_measures(sample['_id'], imq)
         positions = [] # Computed later
         machine_annotation = db.add_machine_annotation(sample['_id'], model_id, heatmap_filename,
-                                                       heatmap_image_filename, positions, net.margin,
-                                                       is_primary_model=is_primary_model)
+                                                       heatmap_image_filename, positions,
+                                                       margin=int(net.margin / data['scale']),
+                                                       is_primary_model=is_primary_model,
+                                                       scale=data['scale'])
         # Count stomata
         heatmap_image = plt.imread(heatmap_image_filename_full)
         positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False)

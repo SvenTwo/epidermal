@@ -7,7 +7,11 @@ from config import config
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
 import numpy as np
+from scipy.ndimage import zoom
 import cv2
+
+
+max_image_size = 4096
 
 
 def init_model_transformer(net):
@@ -36,8 +40,8 @@ def load_model(iter, model_name, train_name, fc8_suffix, input_size, model_id):
     init_model_transformer(net)
     net.output_name = 'fc8' + fc8_suffix + '-conv'
     net.name = '%s_%d' % (train_name, iter)
-    net.margin = get_net_margin(net)
     net.stride = 32
+    net.margin = get_net_margin(net)
     print 'Loaded net %s (margin %d)' % (net.name, net.margin)
     return net
 
@@ -47,7 +51,7 @@ def get_net_margin(net):
     input_shape = net.blobs['data'].shape
     output = net.forward()
     output_shape = output[net.output_name].shape
-    margin = (input_shape[2] - output_shape[2]*32)//2
+    margin = (input_shape[2] - output_shape[2]*net.stride)//2
     return margin
 
 
@@ -71,7 +75,7 @@ def process_image(net, image, allow_undersize=False, verbose=True):
     return np.transpose(probs[1,:,:])
 
 
-def process_image_file(net, image_filename_full, heatmap_filename_full=None, crop=False, verbose=True):
+def process_image_file(net, image_filename_full, heatmap_filename_full=None, crop=False, verbose=True, scales=None):
     image = caffe.io.load_image(image_filename_full)
     if crop:
         h, w = net.original_shape[2:4]
@@ -88,13 +92,29 @@ def process_image_file(net, image_filename_full, heatmap_filename_full=None, cro
             x0 = 0
             x1 = image.shape[1]
         image = image[y0:y1,x0:x1,:]
-    probs = process_image(net, image, allow_undersize=crop, verbose=verbose)
-    if verbose:
-        print ('Probs shape %s' % str(probs.shape)),
-    if heatmap_filename_full:
-        np.save(heatmap_filename_full, probs)
+    if scales is not None:
+        assert not crop
+        best_score = -np.inf
+        probs = None
+        for zscale in scales:
+            if zscale > 1.0:
+                if image.shape[0] * zscale > max_image_size or image.shape[1] * zscale > max_image_size:
+                    continue
+            zimage = zoom(image, (zscale, zscale, 1))
+            zprobs = process_image(net, zimage, allow_undersize=crop, verbose=verbose)
+            score = np.percentile(np.reshape(zprobs, (-1,)), 0.95)
+            if score > best_score:
+                probs = zprobs
+                scale = zscale
     else:
-        return probs
+        probs = process_image(net, image, allow_undersize=crop, verbose=verbose)
+        scale = 1.0
+    if verbose:
+        print ('Probs shape x%.1f = %s' % (scale, str(probs.shape))),
+    output = {'probs': probs, 'scale': scale}
+    if heatmap_filename_full:
+        np.savez_compressed(heatmap_filename_full, probs=probs, scale=scale)
+    return output
 
 
 def rgb2gray(rgb):
@@ -102,12 +122,15 @@ def rgb2gray(rgb):
 
 def plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full):
     image = caffe.io.load_image(image_filename_full)
-    probs = np.load(heatmap_filename_full)
+    data = np.load(heatmap_filename_full)
+    probs = np.array(data['probs'])
+    scale = float(data['scale'])
+    print 'plot_heatmap %s %.1f' % (str(probs.shape), scale)
     probs = probs.transpose()
 
     # Align probability map to input image
     grayimage = rgb2gray(image)
-    stride = 32
+    stride = int(round(32 / scale))
     probs = cv2.resize(probs, (stride * probs.shape[1], stride * probs.shape[0]), interpolation=cv2.INTER_CUBIC)
     pad = [grayimage.shape[i] - probs.shape[i] for i in (0,1)]
     probs = cv2.copyMakeBorder(probs, pad[0]/2, (pad[0]+1)/2, pad[1]/2, (pad[1]+1)/2, cv2.BORDER_CONSTANT)

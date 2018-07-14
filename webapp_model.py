@@ -36,6 +36,15 @@ def enqueue_images(model_id_s):
     return redirect('/model/' + model_id_s)
 
 
+@bp_model.route('/set_primary_model/<model_id_s>')
+@requires_admin
+def set_primary_model(model_id_s):
+    model_id = ObjectId(model_id_s)
+    db.set_primary_model(model_id)
+    set_notice('Updated primary model.')
+    return redirect('/model/' + model_id_s)
+
+
 @bp_model.route('/enqueue_all_images')
 @requires_admin
 def enqueue_all_images():

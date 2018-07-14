@@ -9,6 +9,7 @@ from webapp_upload import upload_file
 from webapp_users import get_current_user_id
 from math import sqrt
 
+
 datasets = Blueprint('datasets', __name__, template_folder='templates')
 
 # Add dataset
@@ -40,6 +41,15 @@ def delete_dataset(dataset_id_str):
     db.delete_dataset(dataset_id)
     set_notice('Dataset "%s" deleted.' % dataset_info['name'])
     return redirect('/')
+
+
+@datasets.route('/dataset/<dataset_id_str>/rerun')
+def dataset_rerun(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    count = db.remove_machine_annotations_for_dataset(dataset_id)
+    set_notice('%d annotations removed.' % count)
+    return redirect('/dataset/' + dataset_id_str)
+
 
 # Main overview page within a dataset
 @datasets.route('/dataset/<dataset_id_str>', methods=['GET', 'POST'])

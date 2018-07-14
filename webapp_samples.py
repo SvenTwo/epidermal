@@ -67,14 +67,16 @@ def show_info(sid):
                 an['title'] = 'Unknown'
             else:
                 an['title'] = model_data['name']
-                an['info_string'] += 'Margin: %d' % model_data['margin']
+                an['info_string'] += 'Margin: %d' % (ad.get('margin') or model_data['margin'])
             an['image_filename'] = 'heatmaps/' + ad['heatmap_image_filename']
             has_image_output = True
         else:
             an['title'] = 'By user %s' % ad.get('user_name')
+        if 'scale' in ad:
+            an['info_string'] += ' - Scale: %.1f' % ad['scale']
         positions = ad['positions']
         if positions is not None:
-            an['info_string'] += ' %d stomata' % len(positions)
+            an['info_string'] += ' - %d stomata' % len(positions)
         annotations += [an]
     annotations = list(reversed(annotations))
     if not has_image_output:

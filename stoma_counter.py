@@ -56,7 +56,9 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
     heatmap_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_filename'])
     sample_info = db.get_sample_by_id(machine_annotation['sample_id'])
     # Derive zoom
-    probs = np.load(heatmap_filename)
+    data = np.load(heatmap_filename)
+    probs = data['probs']
+    scale = data['scale']
     margin = machine_annotation['margin']
     zoom = float(sample_info['size'][0] - 2 * margin) / probs.shape[0]
     positions = []

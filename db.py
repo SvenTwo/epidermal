@@ -395,11 +395,27 @@ def remove_machine_annotations_for_model(model_id):
     return machine_annotations.delete_many({'model_id': model_id})
 
 
+def remove_machine_annotations_for_dataset(dataset_id):
+    asamples = get_samples(dataset_id=dataset_id)
+    c = 0
+    for sample in asamples:
+        r = machine_annotations.delete_one({'sample_id': sample['_id']})
+        c += r.deleted_count
+        sample_update = {'processed': False,
+                         'machine_position_count': None,
+                         'machine_hopkins': None,
+                         'error': False,
+                         'error_string': None}
+        samples.update_one({'_id': sample['_id']}, {"$set": sample_update}, upsert=False)
+    return c
+
+
 def add_machine_annotation(sample_id, model_id, heatmap_filename, heatmap_image_filename, positions, margin,
-                           is_primary_model):
+                           is_primary_model, scale=1.0):
     annotation_query = {'sample_id': sample_id, 'model_id': model_id}
     annotation_record = {'sample_id': sample_id, 'model_id': model_id, 'heatmap_filename': heatmap_filename,
-                         'heatmap_image_filename': heatmap_image_filename, 'positions': positions, 'margin': margin}
+                         'heatmap_image_filename': heatmap_image_filename, 'positions': positions, 'margin': margin,
+                         'scale': scale}
     machine_annotations.update(annotation_query, annotation_record, upsert=True)
     annotation_record['_id'] = machine_annotations.find_one(annotation_query)['_id']
     if is_primary_model:
@@ -411,11 +427,15 @@ def set_primary_machine_annotation(sample_id, positions):
     if positions is None:
         sample_update = {'processed': False,
                          'machine_position_count': None,
-                         'machine_hopkins': None}
+                         'machine_hopkins': None,
+                         'error': False,
+                         'error_string': None}
     else:
         sample_update = {'processed': True,
                          'machine_position_count': len(positions),
-                         'machine_hopkins': hopkins(np.array(positions))}
+                         'machine_hopkins': hopkins(np.array(positions)),
+                         'error': False,
+                         'error_string': None}
     samples.update({'_id': sample_id}, {"$set": sample_update}, upsert=False)
 
 
@@ -434,7 +454,9 @@ def delete_all_machine_annotations():
     r = machine_annotations.delete_many({})
     sample_update = {'processed': False,
                      'machine_position_count': None,
-                     'machine_hopkins': None}
+                     'machine_hopkins': None,
+                     'error': False,
+                     'error_string': None}
     samples.update_many({}, {"$set": sample_update}, upsert=False)
     print 'Deleted %d machine annotations.' % r.deleted_count
     return r.deleted_count > 0
