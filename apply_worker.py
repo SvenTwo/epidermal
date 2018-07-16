@@ -17,10 +17,6 @@ from stoma_counter import compute_stomata_positions
 from image_measures import get_image_measures
 
 
-#default_scales = (1.0, 2.0, 3.0)
-default_scales = None
-
-
 def set_status(status_string, secondary=False):
     status_id = 'sec_worker' if secondary else 'worker'
     db.set_status(status_id, status_string)
@@ -100,8 +96,18 @@ def process_validation_set(net, net_model, validation_set_model, sample_limit=10
                                    worst_predictions=worst_predictions)
 
 
+default_image_zoom_values = {
+    'default': None,
+    'small': [2.0],
+    'tiny': [4.0],
+}
+
+
+
 def process_image_sample(net, model_id, sample_id, is_primary_model):
     sample = db.get_sample_by_id(sample_id)
+    dataset_info = db.get_dataset_by_id(sample['dataset_id'])
+    image_zoom_values = default_image_zoom_values.get(dataset_info.get('image_zoom'))
     image_filename = sample['filename']
     set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
     image_filename_full = os.path.join(config.server_image_path, image_filename)
@@ -122,7 +128,7 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
         heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
         # Process image
-        data = process_image_file(net, image_filename_full, heatmap_filename_full, scales=default_scales)
+        data = process_image_file(net, image_filename_full, heatmap_filename_full, scales=image_zoom_values)
         plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
         if 'imq_entropy' not in sample:
             imq = get_image_measures(image_filename_full)

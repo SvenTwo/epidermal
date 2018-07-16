@@ -61,8 +61,9 @@ def is_readonly_dataset_id(dataset_id):
     return is_readonly_dataset(get_dataset_by_id(dataset_id))
 
 
-def add_dataset(name, user_id=None):
-    dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': [], 'user_id': user_id}
+def add_dataset(name, user_id=None, image_zoom=None):
+    dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': [], 'user_id': user_id,
+                      'image_zoom': image_zoom}
     dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id
     return dataset_record
 

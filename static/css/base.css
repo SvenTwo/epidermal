@@ -18,3 +18,47 @@ form {
 .unqueue-btn {
     cursor: pointer;
 }
+.jumbotron
+{
+    background-image: url('/static/simg/jumbobg.png');
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+}
+.sizesampleimg
+{
+    width: 128px;
+    height: 128px;
+    zoom: normal;
+}
+.sizesamplelabel
+{
+    width: 140px;
+}
+.sizesampletext
+{
+    margin-top: 0.5em;
+}
+input[type=radio]:checked + label>img {
+  border: 1px solid #007bff;
+  box-shadow: 0 0 3px 3px #007bff;
+  opacity: 1.0;
+  filter: none; /* msie */
+}
+input[type=radio] + label>img {
+  border: 1px dashed #808080;
+  width: 128px;
+  height: 128px;
+  opacity: 0.7;
+  filter: alpha(opacity=70); /* msie */
+  transition: 100ms all;
+}
+input[type=radio]:checked + label>p {
+  font-weight: bold;
+}
+input[type=radio] + label>p {
+  font-weight: normal;
+}
+.input-hidden {
+  position: absolute;
+  left: -9999px;
+}

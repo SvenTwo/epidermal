@@ -50,3 +50,9 @@ def disclaimer():
 @base.route('/source')
 def source_redirect():
     return redirect("https://github.com/SvenTwo/epidermal")
+
+
+# Upload page
+@base.route('/upload')
+def upload():
+    return render_template("upload.html", error=pop_last_error())

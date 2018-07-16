@@ -106,6 +106,8 @@ def process_image_file(net, image_filename_full, heatmap_filename_full=None, cro
             if score > best_score:
                 probs = zprobs
                 scale = zscale
+        if probs is None:
+            raise RuntimeError('Image too large for this network (max %dx%d)' % ((int(max_image_size/scales[0]),)*2))
     else:
         probs = process_image(net, image, allow_undersize=crop, verbose=verbose)
         scale = 1.0

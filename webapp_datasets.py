@@ -58,9 +58,11 @@ def dataset_info(dataset_id_str):
     if dataset_id_str == 'new' and request.method == 'POST':
         dataset_id = None
         dataset_info = None
+        new_dataset_zoom = request.form['size']
     else:
         dataset_id = ObjectId(dataset_id_str)
         dataset_info = db.get_dataset_by_id(dataset_id)
+        new_dataset_zoom = None
         if dataset_info is None:
             return render_template("404.html")
     if request.method == 'POST':
@@ -69,7 +71,7 @@ def dataset_info(dataset_id_str):
             if db.is_readonly_dataset(dataset_info):
                 set_error('Dataset is protected.')
                 return redirect('/dataset/' + dataset_id_str)
-        return upload_file(dataset_id)
+        return upload_file(dataset_id, image_zoom=new_dataset_zoom)
     enqueued = db.get_unprocessed_samples(dataset_id=dataset_id)
     finished = db.get_processed_samples(dataset_id=dataset_id)
     for i, sample in enumerate(finished):
@@ -80,5 +82,5 @@ def dataset_info(dataset_id_str):
     return render_template("dataset.html", dataset_name=dataset_info['name'], dataset_id=dataset_id_str,
                            enqueued=enqueued, finished=finished, errored=errored, status=db.get_status('worker'),
                            readonly=db.is_readonly_dataset(dataset_info), error=pop_last_error(),
-                           dataset_user=dataset_info.get('user'))
+                           dataset_user=dataset_info.get('user'), image_zoom=dataset_info.get('image_zoom', 'default'))
 

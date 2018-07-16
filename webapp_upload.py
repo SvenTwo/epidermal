@@ -12,7 +12,7 @@ from PIL import Image
 from webapp_base import error_redirect, set_error, set_notice
 
 # Upload
-def upload_file(dataset_id):
+def upload_file(dataset_id, image_zoom=None):
     # check if the post request has the file part
     if 'file' not in request.files: return error_redirect('No file.')
     file = request.files['file']
@@ -24,7 +24,7 @@ def upload_file(dataset_id):
     # Generate dataset if needed
     is_new_dataset = (dataset_id is None)
     if is_new_dataset:
-        dataset_id = db.add_dataset(name=filename, user_id=get_current_user_id())['_id']
+        dataset_id = db.add_dataset(name=filename, user_id=get_current_user_id(), image_zoom=image_zoom)['_id']
     # Handle according to type
     if ext in config.archive_extensions:
         return upload_archive(dataset_id, file, filename, is_new_dataset=is_new_dataset)
