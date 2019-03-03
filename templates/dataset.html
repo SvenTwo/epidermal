@@ -25,6 +25,8 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
+                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_human_positions">Export human annotations as csv</a>
+                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_machine_positions">Export machine annotations as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
                     {% if not readonly %}
                         {% if (not dataset_user) and (user.email) %}

@@ -14,8 +14,8 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 
 
-prob_threshold = 2.0
-prob_area_threshold = 1.0
+default_prob_threshold = 2.0
+default_prob_area_threshold = 1.0
 
 
 def detect_peaks(image):
@@ -51,19 +51,36 @@ def detect_peaks(image):
     return detected_peaks
 
 
-def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_contour=False, do_peaks=True):
+def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_contour=False, do_peaks=True,
+                              prob_threshold=default_prob_threshold,
+                              prob_area_threshold=default_prob_area_threshold):
     # Load heatmap + image
     heatmap_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_filename'])
     sample_info = db.get_sample_by_id(machine_annotation['sample_id'])
     # Derive zoom
     data = np.load(heatmap_filename)
-    probs = data['probs']
-    scale = data['scale']
-    margin = machine_annotation['margin']
-    zoom = float(sample_info['size'][0] - 2 * margin) / probs.shape[0]
+    return compute_stomata_positions_on_prob(probs=data['probs'],
+                                             scale=data['scale'],
+                                             margin=machine_annotation['margin'],
+                                             sample_size=sample_info['size'],
+                                             heatmap_image=heatmap_image,
+                                             plot=plot,
+                                             do_contour=do_contour,
+                                             do_peaks=do_peaks,
+                                             prob_threshold=default_prob_threshold,
+                                             prob_area_threshold=default_prob_area_threshold)
+
+
+def compute_stomata_positions_on_prob(probs, scale, margin, sample_size,
+                                      heatmap_image=None,
+                                      plot=False, do_contour=False, do_peaks=True,
+                                      prob_threshold=default_prob_threshold,
+                                      prob_area_threshold=default_prob_area_threshold,
+                                      verbose=True):
+    zoom = float(sample_size[0] - 2 * margin) / probs.shape[0]
     positions = []
 
-    if do_contour and do_peaks:
+    if do_contour and do_peaks and (heatmap_image is not None):
         heatmap_image2 = np.copy(heatmap_image)
     else:
         heatmap_image2 = heatmap_image
@@ -81,9 +98,10 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
             pos_zoomed = tuple(int(x * zoom + margin + zoom / 2) for x in pos)
             radius_zoomed = int(radius * zoom)
             positions += [pos_zoomed]
-            cv2.circle(heatmap_image2, center=pos_zoomed, radius=radius_zoomed, color=(255, 255, 0), thickness=4)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(heatmap_image2, '%.3f' % thresh_p, pos_zoomed, font, 1.0, (127, 255, 0), 2, cv2.LINE_AA)
+            if heatmap_image2 is not None:
+                cv2.circle(heatmap_image2, center=pos_zoomed, radius=radius_zoomed, color=(255, 255, 0), thickness=4)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(heatmap_image2, '%.3f' % thresh_p, pos_zoomed, font, 1.0, (127, 255, 0), 2, cv2.LINE_AA)
 
     if do_contour:
         pthresh = (probs >= prob_threshold).astype(np.uint8).copy()
@@ -94,9 +112,11 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
             pos_zoomed = tuple(int(x * zoom + margin + zoom/2) for x in pos)[::-1]
             radius_zoomed = int(radius * zoom)
             positions += [pos_zoomed]
-            cv2.circle(heatmap_image, center=pos_zoomed, radius=radius_zoomed, color=(255,255,0), thickness=4)
+            if heatmap_image is not None:
+                cv2.circle(heatmap_image, center=pos_zoomed, radius=radius_zoomed, color=(255,255,0), thickness=4)
 
-    print 'Found %d stomata' % len(positions)
+    if verbose:
+        print 'Found %d stomata' % len(positions)
 
     if plot:
         f, axarr = plt.subplots(2, 3, figsize=(12, 7))

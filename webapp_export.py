@@ -21,6 +21,7 @@ import numpy as np
 from math import sqrt
 from itertools import chain
 from webapp_samples import info_table_entries
+from webapp_users import get_current_user_id
 from scipy import stats
 
 
@@ -58,6 +59,28 @@ def export_generator(samples, yield_header=True):
         yield ','.join([str(s.get(k)) for k in export_keys]) + '\n'
 
 
+def export_positions_generator(samples, yield_header=True, human=False):
+    if yield_header:
+        yield ','.join(('sample_name', 'sample_filename',
+                        'center_x_px', 'center_y_px',
+                        'center_x_relative', 'center_y_relatrive')) + '\n'
+    for s in samples:
+        sample_name = s.get('name')
+        sample_filename = s.get('filename')
+        if human:
+            annotations = db.get_human_annotations(s['_id'])
+        else:
+            annotations = db.get_machine_annotations(s['_id'])
+        if not annotations:
+            continue
+        size = s['size']
+        for pos in annotations[0]['positions']:
+            if human:
+                pos = (pos['x'], pos['y'])
+            rel_pos = ['%.3f' % (float(p) / s) for p, s in zip(pos, size)]
+            yield ','.join(map(str, (sample_name, sample_filename, pos[0], pos[1], rel_pos[0], rel_pos[1]))) + '\n'
+
+
 def get_all_samples(dataset_id, dataset_info=None):
     # Get all samples, annotated with dataset name
     if dataset_info is None:
@@ -77,6 +100,32 @@ def dataset_export(dataset_id_str):
     dataset_info = db.get_dataset_by_id(dataset_id)
     results = export_generator(get_all_samples(dataset_id, dataset_info))
     dataset_export_name, _ext = os.path.splitext(secure_filename(dataset_info['name']))
+    dataset_export_name += '.csv'
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition":
+                                 "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/dataset/<dataset_id_str>/export_human_positions')
+def dataset_export_human_positions(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    dataset_info = db.get_dataset_by_id(dataset_id)
+    results = export_positions_generator(get_all_samples(dataset_id, dataset_info), human=True)
+    dataset_export_name, _ext = os.path.splitext(secure_filename(dataset_info['name'] + '_human_positions'))
+    dataset_export_name += '.csv'
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition":
+                                 "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/dataset/<dataset_id_str>/export_machine_positions')
+def dataset_export_machine_positions(dataset_id_str):
+    dataset_id = ObjectId(dataset_id_str)
+    dataset_info = db.get_dataset_by_id(dataset_id)
+    results = export_positions_generator(get_all_samples(dataset_id, dataset_info), human=False)
+    dataset_export_name, _ext = os.path.splitext(secure_filename(dataset_info['name'] + '_machine_positions'))
     dataset_export_name += '.csv'
     return Response(results,
                     mimetype="text/plain",
@@ -113,6 +162,45 @@ def dataset_export_all():
                     mimetype="text/plain",
                     headers={"Content-Disposition":
                                  "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/user_export_all')
+def dataset_user_export_all():
+    user_id = get_current_user_id()
+    datasets = [] if user_id is None else db.get_datasets_by_user(user_id)
+    all_datasets = [export_generator(get_all_samples(dataset['_id']), not i) for i, dataset in enumerate(datasets)]
+    results = chain(*all_datasets)
+    dataset_export_name, _ext = os.path.splitext(secure_filename('user_export_all.csv'))
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition":
+                                 "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/user_export_human_positions')
+def dataset_user_export_human_positions():
+    user_id = get_current_user_id()
+    datasets = [] if user_id is None else db.get_datasets_by_user(user_id)
+    all_datasets = [export_positions_generator(get_all_samples(dataset['_id']), yield_header=not i, human=True)
+                    for i, dataset in enumerate(datasets)]
+    results = chain(*all_datasets)
+    dataset_export_name, _ext = os.path.splitext(secure_filename('user_export_all_human_positions.csv'))
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition": "attachment;filename=%s" % dataset_export_name})
+
+
+@data_export.route('/user_export_machine_positions')
+def dataset_user_export_machine_positions():
+    user_id = get_current_user_id()
+    datasets = [] if user_id is None else db.get_datasets_by_user(user_id)
+    all_datasets = [export_positions_generator(get_all_samples(dataset['_id']), yield_header=not i, human=False)
+                    for i, dataset in enumerate(datasets)]
+    results = chain(*all_datasets)
+    dataset_export_name, _ext = os.path.splitext(secure_filename('user_export_all_machine_positions.csv'))
+    return Response(results,
+                    mimetype="text/plain",
+                    headers={"Content-Disposition": "attachment;filename=%s" % dataset_export_name})
 
 
 def export_model_comparison_ds(samples, yield_header, models):

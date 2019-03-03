@@ -55,7 +55,9 @@ def dataset_rerun(dataset_id_str):
 @datasets.route('/dataset/<dataset_id_str>', methods=['GET', 'POST'])
 def dataset_info(dataset_id_str):
     print 'request.method', request.method
-    if dataset_id_str == 'new' and request.method == 'POST':
+    if dataset_id_str == 'new':
+        if request.method != 'POST':
+            return redirect('/')
         dataset_id = None
         dataset_info = None
         new_dataset_zoom = request.form['size']

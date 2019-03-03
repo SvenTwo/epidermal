@@ -106,6 +106,8 @@ default_image_zoom_values = {
 
 def process_image_sample(net, model_id, sample_id, is_primary_model):
     sample = db.get_sample_by_id(sample_id)
+    if sample is None:
+        return
     dataset_info = db.get_dataset_by_id(sample['dataset_id'])
     image_zoom_values = default_image_zoom_values.get(dataset_info.get('image_zoom'))
     image_filename = sample['filename']
