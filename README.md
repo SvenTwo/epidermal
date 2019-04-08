@@ -15,9 +15,13 @@ pyIMQ for image quality measures is also required and can be found here: https:/
 
 ## Command-Line Interface
 
-A CLI can be used for batch processing locally. The processing command is as follows:
+If you prefer to not use the web service, a script can be used for batch processing locally. It can be used to input a set of images and output CSV file with stomata counts, and optionally create heatmaps of each processed image.
 
-    process_images.py [-h] --weights-filename WEIGHTS_FILENAME
+Download the pre-trained model weights from TODO and unzip the two files (TODO). 
+
+The processing command allows tweaking various settings such as the input scale and detection threshold. The interface is:
+
+    python2.7 process_images.py [-h] --weights-filename WEIGHTS_FILENAME
                          --proto-filename PROTO_FILENAME
                          [--gpu-index GPU_INDEX]
                          [--cnn-top-layer-name CNN_TOP_LAYER_NAME]
@@ -31,7 +35,9 @@ A CLI can be used for batch processing locally. The processing command is as fol
                          [--verbose]
                          image-paths [image-paths ...]
                          
-Download the pre-trained model weights from TODO and pass the .caffemodel as `--weights-filename` and the .prototxt as `--proto-filename`.
+From the downloaded model, pass the .caffemodel as `--weights-filename` and the .prototxt as `--proto-filename`. For example:
+
+`TODO`
  
 
 ## Web service
