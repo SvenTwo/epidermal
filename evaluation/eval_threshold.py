@@ -56,11 +56,31 @@ def test_on_dataset(model, dataset_id):
 
 
 if __name__ == '__main__':
-    npd = test_on_dataset(db.get_primary_model(), ObjectId('5a257e49bca3b71cfbb891c5'))
-    np.save('/home/sven2/epicounttest.npy', npd)
-    npd = np.load('/home/sven2/epicounttest.npy')
-    err = np.abs(npd[:, :, 1] - npd[:, :, 0])
-    merr = np.mean(err, axis=0)
-    plt.plot(bins, merr)
-    plt.ylim([0, 50])
+    fig, ax = plt.subplots()
+    test_ds_ids = {
+        'twenty_x_test': '5a257e49bca3b71cfbb891c5',
+        'stomata_patterning_1k': '5ca76766bca3b70d983849fe',
+        'cuticle_db_test': '5a2c3f7cbca3b76969257209',
+    }
+    for tst_name, tst_id in test_ds_ids.iteritems():
+        fname = '/home/sven2/epicounttest_%s.npy' % tst_name
+        if os.path.isfile(fname):
+            npd = np.load(fname)
+        else:
+            npd = test_on_dataset(db.get_primary_model(), ObjectId(tst_id))
+            np.save(fname, npd)
+        err = np.abs(npd[:, :, 1] - npd[:, :, 0])
+        merr = np.mean(err, axis=0)
+        ax.plot(bins, merr, label=tst_name)
+    sbins = np.arange(0, 4, 0.5)
+    sbins_vals = np.exp(sbins) / (np.exp(sbins) + np.exp(-sbins))
+    sbin_strings = map(lambda v: '%.3f' % v, sbins_vals)
+    ax.set_xticks(sbins)
+    ax.set_xticklabels(sbin_strings, rotation=45)
+    #ax.set_ylim([0, 27])
+    ax.set_xlabel('Threshold probability')
+    ax.set_ylabel('Error count')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('/home/sven2/epi_err_by_thresh.png')
     plt.show()

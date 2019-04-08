@@ -77,6 +77,9 @@
                   </li>
               </ul>
         </nav>
+            <!--<div class="alert alert-danger">
+                <h2><strong>Maintenance on Sat 03/23/2019</strong>: We're running some maintenance on our power grid. Server will be down for a few hours on Saturday.</h2>
+            </div>-->
         {% for msgpre, msg, msgclass in error %}
             <div class="alert alert-{{ msgclass }}">
                 <strong>{{ msgpre }}: </strong> {{ msg }}
