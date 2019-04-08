@@ -1,7 +1,44 @@
-Epidermal images test project
+# Stomata Counter
 
-Train and test an AlexNet on annotated stomata images. All experimental; nothing organized yet. Scripts to be used in
-the following order:
+Finds and counts stomata in microscopic images of leaves. This is code for developers who intend to build their own web service or train their own models. If you just want to evaluate images, you can use our existing service running at http://www.stomata.science/
+
+## Installation
+
+The project is python2.7-based using caffe for the CNN processing. First install caffe http://caffe.berkeleyvision.org/installation.html
+and remember to also install the python bindings (`make pycaffe` if you compile yourself). For all basic python dependencies:
+
+```buildoutcfg
+for req in $(cat requirements.txt); do pip install $req; done 
+```  
+
+pyIMQ for image quality measures is also required and can be found here: https://github.com/danielsnider/PyImageQualityRanking - if pyimq is not installed, the service should run but image quality measures will not be available.
+
+## Command-Line Interface
+
+A CLI can be used for batch processing locally. The processing command is as follows:
+
+    process_images.py [-h] --weights-filename WEIGHTS_FILENAME
+                         --proto-filename PROTO_FILENAME
+                         [--gpu-index GPU_INDEX]
+                         [--cnn-top-layer-name CNN_TOP_LAYER_NAME]
+                         [--scale SCALE]
+                         [--heatmap-output-path HEATMAP_OUTPUT_PATH]
+                         [--plot-contours] [--plot-no-peaks]
+                         [--prob-threshold PROB_THRESHOLD]
+                         [--prob-area-threshold PROB_AREA_THRESHOLD]
+                         --csv-output-filename CSV_OUTPUT_FILENAME
+                         [--output-fields {count,image_filename,imq_entropy,imq_hf_entropy,imq_hf_kurtosis,imq_hf_mean,imq_hf_power,imq_hf_skewness,imq_hf_std,imq_hf_threshfreq,margin,positions,scale} [{count,image_filename,imq_entropy,imq_hf_entropy,imq_hf_kurtosis,imq_hf_mean,imq_hf_power,imq_hf_skewness,imq_hf_std,imq_hf_threshfreq,margin,positions,scale} ...]]
+                         [--verbose]
+                         image-paths [image-paths ...]
+                         
+Download the pre-trained model weights from TODO and pass the .caffemodel as `--weights-filename` and the .prototxt as `--proto-filename`.
+ 
+
+## Web service
+
+Annotation and custom model training can be done via the admin interface on the web service. To run the web service:
+
+`TODO`
 
     paths.py            - Modify this to include local paths
     mkepinet.py         - Generate the model definition structure (requires serrecaffe. Not neeed if you use an existing
