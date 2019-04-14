@@ -62,3 +62,26 @@ input[type=radio] + label>p {
   position: absolute;
   left: -9999px;
 }
+
+
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+
+.spinner-border {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  vertical-align: text-bottom;
+  border: 5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border .75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 30;
+  height: 30;
+  border-width: 3;
+}

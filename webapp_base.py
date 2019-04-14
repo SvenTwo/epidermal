@@ -56,3 +56,14 @@ def source_redirect():
 @base.route('/upload')
 def upload():
     return render_template("upload.html", error=pop_last_error())
+
+
+# Loading... page
+@base.route('/loading/<path:target_path>')
+def loading_page(target_path):
+    target_desc = ''
+    if 'export_err_by_threshold' in target_path:
+        target_desc = 'Error by threshold graph'
+    elif 'export_correlation' in target_path:
+        target_desc = 'Human-to-automatic stomata count correlation'
+    return render_template("loading.html", error=pop_last_error(), target_path=target_path, target_desc=target_desc)

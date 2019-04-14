@@ -27,7 +27,8 @@
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_human_positions">Export human annotations as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_machine_positions">Export machine annotations as csv</a>
-                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    <a class="dropdown-item" href="/loading/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    <a class="dropdown-item" href="/loading/dataset/{{ dataset_id }}/export_err_by_threshold">Export error by detection threshold graph</a>
                     {% if not readonly %}
                         {% if (not dataset_user) and (user.email) %}
                             <a class="dropdown-item" href="/claim_dataset/{{ dataset_id }}">Claim dataset</a>
