@@ -70,7 +70,7 @@ def process_image(net, image_path, args):
     positions = compute_stomata_positions_on_prob(probs=data['probs'],
                                                   scale=args.scale,
                                                   margin=margin,
-                                                  sample_size=data['input_shape'][:2],
+                                                  sample_size=(data['input_shape'][1], data['input_shape'][0]),
                                                   heatmap_image=heatmap_image,
                                                   plot=False,
                                                   do_contour=has_heatmap and args.plot_contours,
