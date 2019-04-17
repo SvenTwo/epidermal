@@ -12,14 +12,14 @@ samples = Blueprint('samples', __name__, template_folder='templates')
 
 # Names and values to be shown in info table
 info_table_entries = (
-    ('Image quality - Entropy', 'imq_entropy'),
-    ('Image quality - HF mean', 'imq_hf_mean'),
-    ('Image quality - HF std', 'imq_hf_std'),
-    ('Image quality - HF entropy', 'imq_hf_entropy'),
-    ('Image quality - HF threshold frequency', 'imq_hf_threshfreq'),
-    ('Image quality - HF power', 'imq_hf_power'),
-    ('Image quality - HF skewness', 'imq_hf_skewness'),
-    ('Image quality - HF kurtosis', 'imq_hf_kurtosis')
+    ('tEntropy', 'imq_entropy', 'Image quality - Entropy'),
+    ('fMean', 'imq_hf_mean', 'Image quality - HF mean'),
+    ('fSTD', 'imq_hf_std', 'Image quality - HF std'),
+    ('fEntropy', 'imq_hf_entropy', 'Image quality - HF entropy'),
+    ('fThresh', 'imq_hf_threshfreq', 'Image quality - HF threshold frequency'),
+    ('fPower', 'imq_hf_power', 'Image quality - HF power'),
+    ('fSkewness', 'imq_hf_skewness', 'Image quality - HF skewness'),
+    ('fKurtosis', 'imq_hf_kurtosis', 'Image quality - HF kurtosis')
 )
 
 
@@ -43,10 +43,10 @@ def show_info(sid):
     dataset_id = sample_entry['dataset_id']
     readonly = db.is_readonly_dataset_id(dataset_id)
     info_table = []
-    for info_name, info_key in info_table_entries:
+    for info_id, info_key, info_name in info_table_entries:
         info_value = sample_entry.get(info_key)
         if info_value is not None:
-            info_table.append((info_name, info_value))
+            info_table.append((info_id, info_name, info_value))
     annotations = []
     if sample_entry['error']:
         info_string = Markup('Error: <pre>' + sample_entry['error_string'] + '</pre>')

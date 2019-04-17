@@ -3,6 +3,8 @@
 
 import time
 import os
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sys
 import subprocess
@@ -11,9 +13,10 @@ from tqdm import tqdm
 import random
 
 from config import config
-from apply_fcn import load_model_by_record, process_image_file, plot_heatmap
+from apply_fcn_caffe import process_image_file, plot_heatmap, prob_to_fc8
+from apply_fcn import load_model_by_record
 import db
-from stoma_counter import compute_stomata_positions
+from stoma_counter import compute_stomata_positions, default_prob_threshold
 from image_measures import get_image_measures
 
 
@@ -110,6 +113,11 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         return
     dataset_info = db.get_dataset_by_id(sample['dataset_id'])
     image_zoom_values = default_image_zoom_values.get(dataset_info.get('image_zoom'))
+    threshold_prob_val = dataset_info.get('threshold_prob')
+    if not threshold_prob_val:
+        threshold_prob = default_prob_threshold
+    else:
+        threshold_prob = prob_to_fc8(threshold_prob_val)
     image_filename = sample['filename']
     set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
     image_filename_full = os.path.join(config.server_image_path, image_filename)
@@ -143,7 +151,8 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
                                                        scale=data['scale'])
         # Count stomata
         heatmap_image = plt.imread(heatmap_image_filename_full)
-        positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False)
+        positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False,
+                                              prob_threshold=threshold_prob)
         db.update_machine_annotation_positions(sample['_id'], machine_annotation['_id'], positions,
                                                is_primary_model=is_primary_model)
         plt.imsave(heatmap_image_filename_full, heatmap_image)

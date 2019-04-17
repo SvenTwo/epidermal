@@ -30,16 +30,17 @@ data_export = Blueprint('data_export', __name__, template_folder='templates')
 
 
 export_fields = (
-    ('Name', 'name'),
-    ('Status', 'status'),
-    ('Dataset', 'dataset_name'),
-    ('Manual_count', 'human_position_count'),
-    ('Automatic_count', 'machine_position_count'),
-    ('Human distance', 'human_distance'),
-    ('Machine distance', 'machine_distance'),
-    ('Machine hopkins', 'machine_hopkins')) + info_table_entries
-export_names = [e[0] for e in export_fields]
-export_keys = [e[1] for e in export_fields]
+    ('image_id', 'name'),
+    ('status', 'status'),
+    ('dataset', 'dataset_name'),
+    ('human_count', 'human_position_count'),
+    ('automatic_count', 'machine_position_count'),
+    ('human_distance', 'human_distance'),
+    ('automatic_distance', 'machine_distance')) + info_table_entries
+# ('Machine hopkins', 'machine_hopkins') - deleted for now
+# Export columns. Karl doesn't want the threshold frequency.
+export_names = [e[0] for e in export_fields if e[1] != 'imq_hf_threshfreq']
+export_keys = [e[1] for e in export_fields if e[1] != 'imq_hf_threshfreq']
 
 
 def export_generator(samples, yield_header=True):

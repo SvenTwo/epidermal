@@ -12,6 +12,15 @@ import cv2
 max_image_size = 4096
 
 
+def fc8_to_prob(v):
+    return np.exp(v) / (np.exp(v) + np.exp(-v))
+
+
+def prob_to_fc8(p):
+    p = np.clip(p, 0.00001, 0.99999)
+    return np.log(p/(1-p)) / 2
+
+
 def init_model(model_fn, proto_fn_fcn, worker_gpu_index, net_output_name, input_size, network_name):
     if worker_gpu_index > 0:
         caffe.set_mode_gpu()

@@ -61,9 +61,9 @@ def is_readonly_dataset_id(dataset_id):
     return is_readonly_dataset(get_dataset_by_id(dataset_id))
 
 
-def add_dataset(name, user_id=None, image_zoom=None):
+def add_dataset(name, user_id=None, image_zoom=None, threshold_prob=None):
     dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': [], 'user_id': user_id,
-                      'image_zoom': image_zoom}
+                      'image_zoom': image_zoom, 'threshold_prob': threshold_prob}
     dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id
     return dataset_record
 
@@ -87,6 +87,10 @@ def remove_dataset_tag(dataset_id, tag_name):
 
 def set_dataset_user(dataset_id, user_id):
     datasets.update({'_id': dataset_id}, {"$set": {'user_id': user_id}}, upsert=False)
+
+
+def set_dataset_threshold_prob(dataset_id, new_threshold_prob):
+    datasets.update({'_id': dataset_id}, {"$set": {'threshold_prob': new_threshold_prob}}, upsert=False)
 
 
 # Fix dataset date added where it's missing

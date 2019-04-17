@@ -3,6 +3,9 @@
 
 from flask import request, redirect, Blueprint, render_template
 
+from stoma_counter_peaks import default_prob_threshold
+from apply_fcn_caffe import fc8_to_prob
+
 base = Blueprint('base', __name__, template_folder='templates')
 
 # Errors and notices handling
@@ -55,7 +58,9 @@ def source_redirect():
 # Upload page
 @base.route('/upload')
 def upload():
-    return render_template("upload.html", error=pop_last_error())
+    threshold_prob = fc8_to_prob(default_prob_threshold)
+    return render_template("upload.html", error=pop_last_error(), threshold_prob=threshold_prob,
+                           threshold_prob_short=round(threshold_prob, ndigits=3))
 
 
 # Loading... page

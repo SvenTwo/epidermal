@@ -3,6 +3,8 @@
 
 import numpy as np
 import cv2
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
@@ -51,7 +53,7 @@ def compute_stomata_positions_on_prob(probs, scale, margin, sample_size,
                                       prob_threshold=default_prob_threshold,
                                       prob_area_threshold=default_prob_area_threshold,
                                       verbose=True):
-    zoom = float(sample_size[1] - 2 * margin) / probs.shape[0]
+    zoom = float(sample_size[0] - 2 * margin) / probs.shape[0]
     if verbose:
         print 'Stomata count sample_size=%s  probs.shape=%s  zoom=%s' \
               % (sample_size, probs.shape, zoom)

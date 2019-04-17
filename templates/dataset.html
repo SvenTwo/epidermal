@@ -17,6 +17,7 @@
           {% else %}
           <h3>Dataset <strong>{{ dataset_name }}</strong>.</h3>
           <p>Stomata size: {{ image_zoom }}</p>
+          <p>Threshold probability: {{ threshold_prob }} <a href="#" onclick='setDatasetThresholdProb("{{ dataset_id }}", {{ threshold_prob }});'>[ change... ]</a></p>
           {% endif %}
           <div class="col-md-3 float-md-right">
               <div class="dropdown">
@@ -112,5 +113,5 @@
 {% block tailjs %}
     {{ super() }}
     <script>var dataset_id = "{{ dataset_id }}";</script>
-     <script src="/static/js/dataset.js?v=5"></script>
+     <script src="/static/js/dataset.js?v=6"></script>
 {% endblock %}

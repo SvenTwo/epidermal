@@ -15,6 +15,7 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
                               prob_area_threshold=default_prob_area_threshold):
     # Load heatmap + image
     heatmap_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_filename'])
+    print 'Counting thresh %f on heatmap %s' % (prob_threshold, heatmap_filename)
     sample_info = db.get_sample_by_id(machine_annotation['sample_id'])
     # Derive zoom
     data = np.load(heatmap_filename)
