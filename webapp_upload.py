@@ -40,7 +40,7 @@ def make_unique_server_image_filename(filename):
     filename = basename + ext
     i = 1
     while True:
-        full_fn = os.path.join(config.server_image_path, filename)
+        full_fn = os.path.join(config.get_server_image_path(), filename)
         if not os.path.isfile(full_fn):
             break
         filename = '%s-%03d%s' % (basename, i, ext)

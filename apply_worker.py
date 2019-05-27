@@ -64,7 +64,7 @@ def process_secondary_models(net, model):
 # Process all training and validation images of a model training run
 def process_validation_set(net, net_model, validation_set_model, sample_limit=10000):
     # List images
-    sample_path = os.path.join(config.train_data_path, str(validation_set_model['_id']), 'samples')
+    sample_path = os.path.join(config.get_train_data_path(), str(validation_set_model['_id']), 'samples')
     for subset in 'test', 'train':
         set_status('Processing model %s %s set %s...' % (net_model['name'], subset, validation_set_model['name']))
         imagelist_filename = os.path.join(sample_path, subset + '.txt')
@@ -120,7 +120,7 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         threshold_prob = prob_to_fc8(threshold_prob_val)
     image_filename = sample['filename']
     set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
-    image_filename_full = os.path.join(config.server_image_path, image_filename)
+    image_filename_full = os.path.join(config.get_server_image_path(), image_filename)
     if not os.path.isfile(image_filename_full):
         db.set_sample_error(sample['_id'], 'File does not exist: "%s".' % image_filename_full)
         return
@@ -132,11 +132,11 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         # Lots of saving and loading here. TODO: Should be optimized to be done all in memory.
         # Determine output file paths
         heatmap_filename = os.path.join(net.name, basename + '_heatmap.npz')
-        heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
+        heatmap_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_filename)
         if not os.path.isdir(os.path.dirname(heatmap_filename_full)):
             os.makedirs(os.path.dirname(heatmap_filename_full))
         heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
-        heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
+        heatmap_image_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_image_filename)
         # Process image
         data = process_image_file(net, image_filename_full, heatmap_filename_full, scales=image_zoom_values)
         plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)

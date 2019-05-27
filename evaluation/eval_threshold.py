@@ -19,9 +19,9 @@ def get_heatmap_fn(model, sample):
     #net_name = model['name']
     basename, ext = os.path.splitext(sample['filename'])
     heatmap_filename = os.path.join(net_name, basename + '_heatmap.npz')
-    heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
+    heatmap_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_filename)
     #heatmap_image_filename = os.path.join(net_name, basename + '_heatmap.jpg')
-    #heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
+    #heatmap_image_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_image_filename)
     return heatmap_filename_full
 
 def test_on_dataset(model, dataset_id, bins):
@@ -63,7 +63,7 @@ def plot_err_by_threshold(model, dataset_ids, bins=None, use_cache=False):
     fig, ax = plt.subplots()
     for dataset_id in dataset_ids:
         ds = db.get_dataset_by_id(dataset_id)
-        fname = os.path.join(config.data_path, 'epicounttest_%s.npy' % str(dataset_id))
+        fname = os.path.join(config.get_data_path(), 'epicounttest_%s.npy' % str(dataset_id))
         if use_cache and os.path.isfile(fname):
             npd = np.load(fname)
         else:

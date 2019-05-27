@@ -11,7 +11,7 @@ from epidermal.config import config
 
 
 def savefig(name):
-    pth = os.path.join(config.plot_path, name + '.pdf')
+    pth = os.path.join(config.get_plot_path(), name + '.pdf')
     plt.gcf().savefig(pth, bbox_inches='tight')
 
 

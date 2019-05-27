@@ -13,7 +13,7 @@ def add_image_measures():
         if not s.get('imq_entropy'):
             image_filename = s['filename']
             print 'Processing %s...' % image_filename
-            image_filename_full = os.path.join(config.server_image_path, image_filename)
+            image_filename_full = os.path.join(config.get_server_image_path(), image_filename)
             image_measures = get_image_measures(image_filename_full)
             db.set_image_measures(s['_id'], image_measures)
 

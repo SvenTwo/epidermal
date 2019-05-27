@@ -146,4 +146,4 @@ def validation_page(val_id_s):
 def image_sample(train_id_s, sample_name):
     subpath = os.path.join(train_id_s, 'samples', sample_name)
     print 'GETTING', subpath
-    return send_from_directory(config.train_data_path, subpath)
+    return send_from_directory(config.get_train_data_path(), subpath)

@@ -25,7 +25,7 @@ def imagelist2lmdb(image_root, imagelist_filename, lmdb_filename):
     if os.path.exists(lmdb_filename):
         print 'Exists. Skipping.'
         return
-    cnv_cmd = os.path.join(config.caffe_path, 'tools', 'convert_imageset')
+    cnv_cmd = os.path.join(config.get_caffe_path(), 'tools', 'convert_imageset')
     cmd = [cnv_cmd, image_root + '/', imagelist_filename, lmdb_filename]
     if subprocess.call(cmd):
         raise RuntimeError('Error generating LMDB.')
@@ -56,7 +56,7 @@ def train(model_id):
     train_label = model['train_tag']
     # Prepare data
     mset_status('Prepare folder')
-    output_path = os.path.join(config.train_data_path, str(model_id), 'samples')
+    output_path = os.path.join(config.get_train_data_path(), str(model_id), 'samples')
     if not os.path.isdir(output_path):
         os.makedirs(output_path)
     mset_status('Extracting patches')
@@ -90,8 +90,8 @@ def train(model_id):
         remake_symlink(real_cnn_output_path, cnn_output_path)
         # Run caffe!
         mset_status('Run trainer')
-        caffe_cmd = os.path.join(config.caffe_path, 'tools', 'caffe')
-        cmd = [caffe_cmd, 'train', '--solver', 'solver_alexnetftc.prototxt', '--weights', config.caffe_train_baseweights] + config.caffe_train_options.split(' ')
+        caffe_cmd = os.path.join(config.get_caffe_path(), 'tools', 'caffe')
+        cmd = [caffe_cmd, 'train', '--solver', 'solver_alexnetftc.prototxt', '--weights', config.get_caffe_train_baseweights()] + config.caffe_train_options.split(' ')
         print cmd
         if subprocess.call(cmd):
             raise RuntimeError('Error calling caffe.')

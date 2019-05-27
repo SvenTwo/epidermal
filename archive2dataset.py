@@ -168,18 +168,18 @@ def archive2dataset():
     extract_size = (256, 256) # wdt, hgt
     n_angles = 8
     angles = np.linspace(0, 360, num=n_angles, endpoint=False)
-    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
+    train_path = os.path.join(config.get_data_path(), 'Pb_stomata_09_03_16_Archive')
     positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
     #plot_all_locations(train_path, positions, os.path.join(data_path, 'epi_targets'))
-    output_path = os.path.join(config.data_path, 'epi1')
+    output_path = os.path.join(config.get_data_path(), 'epi1')
     #generate_image_patches(train_path, positions, output_path, angles, extract_size)
     # Generate dataset text files
-    filelist = generate_filelist(output_path, config.data_path)
+    filelist = generate_filelist(output_path, config.get_data_path())
     class_indices = {'distractor': 0, 'target': 1}
     train, val, test = split_train_test(filelist, n_test=100, n_val=100)
-    save_filelist_shuffled(train, class_indices, os.path.join(config.data_path, 'epi1_train.txt'))
-    save_filelist_shuffled(val, class_indices, os.path.join(config.data_path, 'epi1_val.txt'))
-    save_filelist_shuffled(test, class_indices, os.path.join(config.data_path, 'epi1_test.txt'))
+    save_filelist_shuffled(train, class_indices, os.path.join(config.get_data_path(), 'epi1_train.txt'))
+    save_filelist_shuffled(val, class_indices, os.path.join(config.get_data_path(), 'epi1_val.txt'))
+    save_filelist_shuffled(test, class_indices, os.path.join(config.get_data_path(), 'epi1_test.txt'))
 
 def dbpos2extpos(pos):
     return (pos['x'], pos['y'])
@@ -197,7 +197,7 @@ def db2patches(output_path, train_label=None, sample_limit=None):
     print 'Extracting patches from %d images to %s...' % (len(annotated_samples), output_path)
     n = 0
     for s in tqdm(annotated_samples):
-        img_filename = os.path.join(config.server_image_path, s['filename'])
+        img_filename = os.path.join(config.get_server_image_path(), s['filename'])
         img_name = s['filename'].replace('.', '_')
         for annotation in db.get_human_annotations(s['_id']):
             allpos = [dbpos2extpos(p) for p in annotation['positions']]
@@ -214,7 +214,7 @@ def patches2filelist(output_path):
 
 def gen_new_output_path():
     idtf = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-    output_path = os.path.join(config.train_data_path, 'DS_' + idtf)
+    output_path = os.path.join(config.get_train_data_path(), 'DS_' + idtf)
     while os.path.isdir(output_path): output_path += '_'
     os.makedirs(output_path)
     return output_path
@@ -231,7 +231,7 @@ def pos2db(p):
 
 def import_karl_labels():
     dataset_id = get_karl_dataset_id()
-    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
+    train_path = os.path.join(config.get_data_path(), 'Pb_stomata_09_03_16_Archive')
     positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
     for fn, pos in positions.iteritems():
         pos_db = [pos2db(p) for p in pos]
@@ -239,7 +239,7 @@ def import_karl_labels():
         fn_full = os.path.join(train_path, fnj)
         im = Image.open(fn_full)
         filename = os.path.basename(fnj)
-        fn_target = os.path.join(config.server_image_path, filename)
+        fn_target = os.path.join(config.get_server_image_path(), filename)
         shutil.copyfile(fn_full, fn_target)
         sample = db.add_sample(os.path.basename(fn_target), size=im.size, dataset_id=dataset_id)
         sample_id = sample['_id']

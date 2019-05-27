@@ -14,7 +14,7 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
                               prob_threshold=default_prob_threshold,
                               prob_area_threshold=default_prob_area_threshold):
     # Load heatmap + image
-    heatmap_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_filename'])
+    heatmap_filename = os.path.join(config.get_server_heatmap_path(), machine_annotation['heatmap_filename'])
     print 'Counting thresh %f on heatmap %s' % (prob_threshold, heatmap_filename)
     sample_info = db.get_sample_by_id(machine_annotation['sample_id'])
     # Derive zoom
@@ -34,10 +34,10 @@ def compute_stomata_positions(machine_annotation, heatmap_image, plot=False, do_
 def compute_stomata_positions_for_sample(sample_id, plot=False):
     machine_annotations = db.get_machine_annotations(sample_id)
     sample = db.get_sample_by_id(sample_id)
-    image_filename = os.path.join(config.server_image_path, sample['filename'])
+    image_filename = os.path.join(config.get_server_image_path(), sample['filename'])
     for machine_annotation in machine_annotations:
-        heatmap_image_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_image_filename'])
-        heatmap_filename = os.path.join(config.server_heatmap_path, machine_annotation['heatmap_filename'])
+        heatmap_image_filename = os.path.join(config.get_server_heatmap_path(), machine_annotation['heatmap_image_filename'])
+        heatmap_filename = os.path.join(config.get_server_heatmap_path(), machine_annotation['heatmap_filename'])
         #plot_heatmap(image_filename, heatmap_filename, heatmap_image_filename)
         print heatmap_image_filename
         heatmap_image = imread(heatmap_image_filename)
