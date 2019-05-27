@@ -117,16 +117,14 @@ This would launch the service on port 8000. You can then open a browser on http:
 Annotation and custom model training can be done via the admin interface on the web service.
 
 
-### Default model
-
-(TODO default model initialization)
-
 
 ### Annotation worker
 
 When images are uploaded, the web service puts worker jobs into a MongoDB. The actual computation is handled by a separate process which can be launched as:
 
      python2.7 apply_worker.py
+     
+Note that the apply worker needs to have a model saved in the database (either trained via annotations from the web interface or imported from another service).
      
      
 ### Train worker
