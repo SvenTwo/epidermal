@@ -44,6 +44,7 @@ class Config:
         self.server_path = os.path.join(self.data_path, 'server')
         self.server_image_path = os.path.join(self.server_path, 'images')
         self.server_heatmap_path = os.path.join(self.server_path, 'heatmaps')
+        self.cnn_path = os.path.join(self.data_path, 'cnn')
         self.image_extensions = ['.jpg', '.jpeg', '.png']
         self.archive_extensions = ['.zip']
         self.max_image_file_size = 1024 * 1024 * 50 # 50MB
@@ -107,6 +108,9 @@ class Config:
 
     def get_server_heatmap_path(self):
         return expand_path(self.server_heatmap_path)
+
+    def get_cnn_path(self):
+        return expand_path(self.cnn_path)
 
     def load(self, config_filepath, save_missing=False):
         config_filepath = os.path.expanduser(config_filepath)

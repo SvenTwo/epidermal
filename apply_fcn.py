@@ -10,8 +10,8 @@ from apply_fcn_caffe import init_model
 def load_model(iter, model_name, train_name, fc8_suffix, input_size, model_id):
     basename = train_name + '_iter_' + str(iter) + '_fcn.caffemodel'
     #model_fn = os.path.join(config.src_path, 'cnn', 'out', train_name + '_iter_' + str(iter) + '_fcn.caffemodel')
-    model_fn = os.path.join(config.src_path, 'cnn', str(model_id), 'out', basename)
-    proto_fn_fcn = os.path.join(config.src_path, 'cnn', model_name + 'fcn.prototxt')
+    model_fn = os.path.join(config.get_cnn_path(), str(model_id), 'out', basename)
+    proto_fn_fcn = os.path.join(config.get_cnn_path(), model_name + 'fcn.prototxt')
     network_name = '%s_%d' % (train_name, iter)
     net = init_model(model_fn=model_fn,
                      proto_fn_fcn=proto_fn_fcn,
