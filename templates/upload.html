@@ -11,7 +11,7 @@
        <div class="col-xs-12" style="height:50px;"></div>
         <div class="col-md-8 border border-primary bg-light">
             <form action="/dataset/new" method=post enctype=multipart/form-data id="upload_image_form">
-                <h2>1. Select stomata size</h2>
+                <h2>1. Configure</h2>
                 <p>Click the size button that corresponds most closely to the <strong>size of the stomata</strong> when your image is viewed at 100% zoom.</p>
                 <div class="form-group">
                     <div class="col-sm-8 text-center">
@@ -38,6 +38,16 @@
                     <p>Threshold probability: <input type="number" min="0.5" max="1.0" step="0.01" name="threshold" value="{{ threshold_prob }}"/>
                         (leave to default of {{ threshold_prob_short }} if you don't know which value to set).
                     </p>
+                    <h3>Contribution</h3>
+                    <div class="form-check">
+                        <p>
+                            <input type="checkbox" class="reuse-checkbox" id="reuseCheck" name="reuseCheck" />
+                            <label class="form-check-label" for="reuseCheck">
+                                Help us improve performance by allowing these images to be used for fine-tuning the StomataCounter model.
+                                See <a href="/about">About page</a> for details.
+                            </label>
+                        </p>
+                    </div>
                 </div>
                 <div class="form-group">
 

@@ -12,7 +12,7 @@ import traceback
 from tqdm import tqdm
 import random
 
-from config import config
+from config import config, add_config_option
 from apply_fcn_caffe import process_image_file, plot_heatmap, prob_to_fc8
 from apply_fcn import load_model_by_record
 import db
@@ -211,6 +211,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Epidermal worker process: Finds stomata in images.')
     parser.add_argument('--run', action='store_true', help='Run the actual process. Otherwise, start process as child.')
     parser.add_argument('--secondary', action='store_true', help='Monitor non-primary models.')
+    add_config_option(parser)
 
     args = parser.parse_args()
     if args.run:

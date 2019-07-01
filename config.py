@@ -2,6 +2,7 @@
 # Per-machine configuration: Loads setting from ~/.epidermal
 
 import os
+import sys
 import ConfigParser
 
 
@@ -21,9 +22,13 @@ class Config:
         # Default configuration values
         self.debug_flask = False
 
+        # Maintenance text
+        self.maintenance_text = ''
+
         # Database connection
         self.db_address = 'localhost'
         self.db_port = 27017
+        self.db_name = 'epidermal'
 
         # Admin page
         self.admin_username = 'admin'
@@ -77,6 +82,9 @@ class Config:
 
         # For evaluation
         self.plot_path = os.path.join(self.data_path, 'plots')
+
+        # Automatic dataset deletion after not accessed for this duration
+        self.automatic_deletion_days = 36500
 
         # Local overloads
         if config_filepath is not None:
@@ -165,4 +173,19 @@ class Config:
             app.config[f[4:]] = getattr(self, f)
 
 
-config = Config(save_missing=True)
+# All scripts using the config can load a custom config with the --config parameter.
+use_config_filepath = '~/.epidermal'
+try:
+    cfg_index = sys.argv.index('--config')
+    use_config_filepath = sys.argv[cfg_index + 1]
+    print 'Loading custom configuration from', use_config_filepath
+except ValueError:
+    pass
+config = Config(config_filepath=use_config_filepath, save_missing=True)
+
+
+# Dummy argument in argparse
+def add_config_option(parser):
+    parser.add_argument('--config',
+                        type=str,
+                        help='Configuration file to use (defaults to ~/.epidermal)')

@@ -2,10 +2,12 @@
 # Admin functions
 
 import re
+from datetime import datetime
 from functools import wraps
 from flask import render_template, request, Response, Blueprint, jsonify, redirect
 from config import config
 import db
+from cleanup_old_datasets import find_old_datasets, delete_datasets
 from webapp_base import pop_last_error, set_error, set_notice
 from bson.objectid import ObjectId
 
@@ -49,6 +51,10 @@ def admin_page():
     num_images = db.get_sample_count()
     num_human_annotations = db.get_human_annotation_count()
     datasets = db.get_datasets()
+    for dataset in datasets:
+        if dataset.get('date_accessed') is None:
+            dataset['date_accessed'] = datetime.now()
+            db.access_dataset(dataset['_id'])
     enqueued = db.get_unprocessed_samples()
     models = db.get_models(details=True)
     model_id_to_name = {m['_id']: m['name'] for m in models}
@@ -141,3 +147,12 @@ def admin_retrain():
                        dataset_only=dataset_only)
     set_notice('Model training scheduled.')
     return redirect('/model/' + str(rec['_id']))
+
+
+@admin.route('/admin/delete_expired_datasets')
+@requires_admin
+def delete_expired_datasets():
+    ds = find_old_datasets()
+    delete_datasets(ds)
+    set_notice('%d datasets deleted' % len(ds))
+    return redirect('/admin')

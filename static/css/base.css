@@ -85,3 +85,7 @@ input[type=radio] + label>p {
   height: 30;
   border-width: 3;
 }
+.reuse-checkbox {
+    position: absolute;
+    margin-top: .25rem;
+}

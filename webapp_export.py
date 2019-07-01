@@ -152,10 +152,14 @@ def dataset_export_correlation(dataset_id_str):
 
 @data_export.route('/dataset/<dataset_id_str>/export_err_by_threshold')
 def dataset_export_err_by_threshold(dataset_id_str):
-    dataset_id = ObjectId(dataset_id_str)
-    model = db.get_primary_model()
-    plot_err_by_threshold(model=model, dataset_ids=[dataset_id])
-    return Response(get_plot_as_png(), mimetype="image/png")
+    try:
+        dataset_id = ObjectId(dataset_id_str)
+        model = db.get_primary_model()
+        plot_err_by_threshold(model=model, dataset_ids=[dataset_id])
+        return Response(get_plot_as_png(), mimetype="image/png")
+    except IOError:
+        return render_template("error.html", error_text='Missing data file due to migration. '
+                                                        'Re-process dataset to produce the graph.')
 
 
 @data_export.route('/export_all')

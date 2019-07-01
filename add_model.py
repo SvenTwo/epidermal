@@ -6,8 +6,7 @@ import sys
 import shutil
 
 import db
-from config import config
-
+from config import config, add_config_option
 
 if __name__ == '__main__':
     import argparse
@@ -35,6 +34,7 @@ if __name__ == '__main__':
                         type=int,
                         default=96,
                         help='Margin left at borders by convolutions.')
+    add_config_option(parser)
 
     args = parser.parse_args()
 

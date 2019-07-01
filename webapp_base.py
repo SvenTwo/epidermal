@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # Basic functions for stomata web server
 
-from flask import request, redirect, Blueprint, render_template
+from flask import request, redirect, Blueprint, render_template, send_from_directory
 
 from stoma_counter_peaks import default_prob_threshold
 from apply_fcn_caffe import fc8_to_prob
+from config import config
+
 
 base = Blueprint('base', __name__, template_folder='templates')
 
@@ -72,3 +74,14 @@ def loading_page(target_path):
     elif 'export_correlation' in target_path:
         target_desc = 'Human-to-automatic stomata count correlation'
     return render_template("loading.html", error=pop_last_error(), target_path=target_path, target_desc=target_desc)
+
+
+# Static images/heatmaps
+@base.route('/static/images/images/<path:path>')
+def static_images(path):
+    return send_from_directory(config.get_server_image_path(), path)
+
+
+@base.route('/static/images/heatmaps/<path:path>')
+def static_heatmaps(path):
+    return send_from_directory(config.get_server_heatmap_path(), path)

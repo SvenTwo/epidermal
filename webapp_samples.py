@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Individual sample info pages
 
+import os
 from flask import Blueprint, redirect, render_template, request, Markup
 import db
 from bson.objectid import ObjectId
@@ -102,7 +103,7 @@ def delete_entry(str_id):
     sample_index, sample_count, prev_sample_id, next_sample_id = db.get_sample_index(dataset_id, id)
     if readonly:
         set_error('Dataset is protected.')
-    elif db.delete_sample(id):
+    elif db.delete_sample(id, delete_files=True):
         set_notice('Item deleted.')
     else:
         set_error('Could not delete item.')
