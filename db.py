@@ -401,6 +401,7 @@ def set_human_annotation(sample_id, user_id, positions, margin, base_annotations
         dataset_id = sample['dataset_id']
         if dataset_id is not None:
             update_dataset_human_annotations(dataset_id)
+            add_dataset_tag(dataset_id, 'has_annotations')
 
 
 def get_human_annotation_count():
