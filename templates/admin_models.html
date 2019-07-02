@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Admin - Models</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Admin - Models</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="col-md-12">
+            <h2>Models</h2>
+            <table id="model_list" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Date added</th>
+                        <th>Margin</th>
+                        <th>Annotations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                        <tr>
+                            <td><a href="/model/{{ model._id }}">{{ model.name }}</a></td>
+                            <td>{{ model.status }}{% if model.primary %} (primary){% endif %}</td>
+                            <td>{{ model.date_added }}</td>
+                            <td>{{ model.margin }}</td>
+                            <td>{{ model.machine_annotation_count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+       </div>
+          <div class="col-md-4" style="border: 1px solid #808080; border-radius: 4px;">
+              <h2>Train model</h2>
+              <form id="retrain_form" action="/admin/retrain" method="post">
+                  <div class="form-group">
+                      <label for="train_label">Unique model name</label>
+                      <input class="form-control" id="train_model_name" name="train_model_name" type="text" value="">
+                  </div>
+                  <div class="form-group">
+                      <label for="train_label">Train set label</label>
+                      <input class="form-control" id="train_label" name="train_label" type="text" value="train">
+                  </div>
+                  <div class="form-group">
+                      <label for="train_sample_limit">Sample limit (optional)</label>
+                      <input class="form-control" id="train_sample_limit" name="train_sample_limit" type="text" value="">
+                  </div>
+                  <div class="form-check">
+                      <label class="form-check-label">
+                          <input class="form-check-input" id="train_primary" name="train_primary" type="checkbox">
+                          Replace primary model
+                      </label>
+                  </div>
+                  <div class="form-check">
+                      <label class="form-check-label">
+                          <input class="form-check-input" id="dataset_only" name="dataset_only" type="checkbox">
+                          Generate dataset only
+                      </label>
+                  </div>
+                  <p><input class="btn btn-primary" type=submit value="Train model"></p>
+              </form>
+          </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <script src="/static/js/admin.js"></script>
+{% endblock %}

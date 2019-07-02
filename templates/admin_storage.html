@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Admin - Storage</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Admin - Storage</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <ul>
+                <li><p><strong>Total samples:</strong> {{ num_images }}</p></li>
+                <li><p><strong>Total annotations:</strong> {{ num_human_annotations }}</p></li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <h3>Storage folders</h3>
+            <table id="storage_list" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Path</th>
+                        <th>Size used</th>
+                        <th>Disk available</th>
+                        <th>Disk size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in path_data %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.path }}</td>
+                            <td>{{ item.used }}</td>
+                            <td>{{ item.disk_avail }}</td>
+                            <td>{{ item.disk_total }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <script src="/static/js/admin.js"></script>
+{% endblock %}

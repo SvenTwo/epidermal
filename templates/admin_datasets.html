@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Admin - Datasets</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Admin - Datasets</h2>
+      </div>
+          <div class="col-md-3 float-md-right">
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Admin operations
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="/export_all">Export all to CSV</a>
+                    <a class="dropdown-item" href="/export_model_comparison">Export model comparison to CSV</a>
+                    <a class="dropdown-item" href="/enqueue_all_images">Enqueue images for all secondary models</a>
+                    <a class="dropdown-item" href="/enqueue_all_validation_sets">Schedule validation sets for all models</a>
+                    <a class="dropdown-item" href="/admin/delete_expired_datasets">Delete expired datasets</a>
+                </div>
+              </div>
+          </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+            <h2>Datasets</h2>
+            <table id="dataset_list" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Samples</th>
+                        <th>Human annotations</th>
+                        <th>Date added</th>
+                        <th>Date accessed</th>
+                        <th>Owner</th>
+                        <th>Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datasets %}
+                        <tr>
+                            <td><a href="/dataset/{{ item._id }}">{{ item.name }}</a></td>
+                            <td>{{ item.sample_count }}</td>
+                            <td>{{ item.human_annotation_count }}</td>
+                            <td>{{ item.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ item.date_accessed.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ item.user.email }}</td>
+                            <td>
+                                {% for tag in item.tags %}
+                                    <a class="btn btn-secondary text-white">{{ tag }}&nbsp;
+                                        <button type="button" class="close rm-tag-btn" aria-label="Close" id="rmtag_{{ item._id }}_{{ tag }}">
+                                            <span aria-hidden="true" class="text-white">&times;</span>
+                                        </button>
+                                    </a>
+                                {% endfor %}
+                                <button class="btn btn-secondary add-tag-btn" id="addtag_{{ item._id }}">+</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <form id="add_dataset_form" action="/add_dataset" method="post"><input type="hidden" name="dataset_name" value=""></form>
+            <a href="javascript:addDataset()">Add dataset...</a>
+       </div>
+      </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <script src="/static/js/admin.js"></script>
+{% endblock %}

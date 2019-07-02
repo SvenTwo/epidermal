@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Overview - Admin - Worker</title>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Admin - Worker</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <ul>
+                {% for status_name, status_value in status %}
+                    <li><p><strong>{{ status_name }} status:</strong> <emph>{{ status_value }}</emph></p></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-8 mt-8">
+            <h2>Counter queue ({{ enqueued|length }})</h2>
+            <ul>
+            {% for item in enqueued %}
+                <li><a href="/info/{{ item._id }}">{{ item.filename }}</a></li>
+            {% endfor %}
+            </ul>
+       </div>
+        <div class="col-md-8 mt-8">
+            <h2>Training validation queue ({{ enqueued2|length }})</h2>
+            <ul>
+            {% for emodel,eimage,eid in enqueued2 %}
+                <li id="sample_queue_{{ eid }}">({{ emodel }}) {{ eimage }} <a class="unqueue-btn" id="unqueue_{{ eid }}">&#10006;</a></li>
+            {% endfor %}
+            </ul>
+       </div>
+
+        {{ super() }}
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <script src="/static/js/admin.js"></script>
+{% endblock %}
