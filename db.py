@@ -15,21 +15,27 @@ epidermal_db = client[config.db_name]
 
 def auto_retry(call):
     """
-    Retry in the event of a mongo AutoReconnect error with an exponential backoff
+    Retry forever in the event of a mongo AutoReconnect error
     """
     def _auto_retry(*args, **kwargs):
-        retries = 5
-        for i in xrange(retries):
+        backoff = 1
+        tries = 1
+        while True:
             try:
                 return call(*args, **kwargs)
             except pymongo.errors.AutoReconnect:
-                sleep = pow(2, i)
                 print(
-                    'MongoDB connection error. Retrying in {} seconds ({} of {})'.format(
-                        sleep, i, retries
+                    'MongoDB connection error. Retrying in {} seconds (attempt {})'.format(
+                        backoff, tries
                     )
                 )
-                time.sleep(sleep)
+                time.sleep(backoff)
+            tries = tries + 1
+            # do exponential backoff until 256 seconds, then switch to a fixed 300
+            if backoff < 256:
+                backoff = pow(2, tries)
+            else:
+                backoff = 300
     return _auto_retry
 
 @auto_retry
