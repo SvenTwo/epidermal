@@ -11,6 +11,6 @@ scipy==1.2.1
 numpy==1.16.2
 Werkzeug==0.14.1
 flask_mongoengine==0.9.3
-Pillow==6.0.0
+Pillow==6.2.0
 paths==0.0.1a1
 scikit_learn==0.20.3
