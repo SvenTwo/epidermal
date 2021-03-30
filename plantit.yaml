@@ -4,7 +4,7 @@ public: True
 clone: False
 doi: 10.1111/nph.15892
 image: docker://wbonelli/epidermal
-commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename output.csv --scale $SCALE --prob-area-threshold $THRESHOLD $INPUT
+commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $(dirname $INPUT))/output.csv --heatmap-output-path $(dirname $(dirname $INPUT)) --scale $SCALE --prob-area-threshold $THRESHOLD $INPUT
 logo: stomata.png
 params:
   - name: scale
@@ -19,6 +19,18 @@ params:
     max: 1
     step: 0.001
     default: 0.982
+input:
+  path:
+  kind: files
+  filetypes:
+    - jpg
+    - png
+output:
+  path:
+  include:
+    patterns:
+      - csv
+      - jpg
 resources:
   time: "00:10:00"
   mem: "5GB"
