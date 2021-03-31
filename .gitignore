@@ -98,3 +98,5 @@ retrain.log
 *.signal
 cnn/out
 cnn/
+*.zip
+/model
