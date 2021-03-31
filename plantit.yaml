@@ -3,8 +3,9 @@ author: Karl Fetter, Sven Eberhardt
 public: True
 clone: False
 doi: 10.1111/nph.15892
+logo: stomata.jpg
 image: docker://wbonelli/epidermal
-commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $(dirname $INPUT))/output.csv --heatmap-output-path $(dirname $(dirname $INPUT)) --scale $SCALE --prob-area-threshold $THRESHOLD $INPUT
+commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $(dirname $INPUT))/output.csv --heatmap-output-path $(dirname $(dirname $INPUT)) --scale $SCALE --prob-threshold $THRESHOLD $INPUT
 logo: stomata.png
 params:
   - name: scale
@@ -17,8 +18,8 @@ params:
     type: number
     min: 0
     max: 1
-    step: 0.001
-    default: 0.982
+    step: 0.01
+    default: 0.98
 input:
   path:
   kind: files
