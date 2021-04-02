@@ -5,7 +5,7 @@ clone: False
 doi: 10.1111/nph.15892
 logo: stomata.jpg
 image: docker://wbonelli/epidermal
-commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $(dirname $INPUT))/output.csv --heatmap-output-path $(dirname $(dirname $INPUT)) --scale $SCALE --prob-threshold $THRESHOLD $INPUT
+commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $(dirname $INPUT))/$(basename $INPUT).output.csv --heatmap-output-path $(dirname $(dirname $INPUT)) --scale $SCALE --prob-threshold $THRESHOLD $(find $INPUT -type f | tr "\n" " ")
 params:
   - name: scale
     type: number
@@ -21,7 +21,7 @@ params:
     default: 0.98
 input:
   path:
-  kind: files
+  kind: directory
   filetypes:
     - jpg
     - png
