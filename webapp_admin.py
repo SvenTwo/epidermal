@@ -1,15 +1,34 @@
 #!/usr/bin/env python
 # Admin functions
 
+import os
 import re
+from datetime import datetime
 from functools import wraps
 from flask import render_template, request, Response, Blueprint, jsonify, redirect
+from bson.objectid import ObjectId
+import subprocess
+
 from config import config
 import db
+from cleanup_old_datasets import find_old_datasets, delete_datasets
 from webapp_base import pop_last_error, set_error, set_notice
-from bson.objectid import ObjectId
 
 admin = Blueprint('admin', __name__, template_folder='templates')
+
+
+def bytes_humanfriendly(n_bytes):
+    suffixes = ('%d bytes', '%1.2f kb', '%1.2f MB', '%1.2f GB', '%1.2f TB', '%1.2f PB', '%1.2f ExB')
+    for suffix in suffixes:
+        if n_bytes < 1024 or suffix == suffixes[-1]:
+            return suffix % n_bytes
+        n_bytes = float(n_bytes) / 1024
+
+
+def get_recursive_folder_size(path):
+    size = int(subprocess.check_output(['du', '-sb', path]).split()[0].decode('utf-8'))
+    return size
+
 
 def check_auth(username, password):
     """This function is called to check if a username /
@@ -37,18 +56,65 @@ def requires_admin(f):
 
 
 status_ids = (
-    ('Image worker', 'worker'),
-    ('Secondary image worker', 'sec_worker'),
+    ('Count worker', 'worker'),
+    ('Validation worker', 'sec_worker'),
     ('Network trainer', 'trainer'),
 )
 
 
 @admin.route('/admin')
+def admin_overview():
+    return render_template('admin.html', error=pop_last_error())
+
+
+@admin.route('/admin/datasets')
 @requires_admin
-def admin_page():
+def admin_datasets():
+    datasets = db.get_datasets()
+    for dataset in datasets:
+        if dataset.get('date_accessed') is None:
+            dataset['date_accessed'] = datetime.now()
+            db.access_dataset(dataset['_id'])
+    return render_template('admin_datasets.html', datasets=datasets, error=pop_last_error())
+
+
+@admin.route('/admin/models')
+@requires_admin
+def admin_models():
+    models = db.get_models(details=True)
+    return render_template('admin_models.html', models=models, error=pop_last_error())
+
+
+@admin.route('/admin/storage')
+@requires_admin
+def admin_storage():
     num_images = db.get_sample_count()
     num_human_annotations = db.get_human_annotation_count()
-    datasets = db.get_datasets()
+    paths = (
+        ('server_heatmap', config.get_server_heatmap_path()),
+        ('server_image', config.get_server_image_path()),
+        ('cnn', config.get_cnn_path()),
+        ('caffe', config.get_caffe_path()),
+        ('plot', config.get_plot_path()),
+        ('train_data', config.get_train_data_path()),
+    )
+    path_data = []
+    for path_name, path in paths:
+        pstats = os.statvfs(path)
+        path_data.append({
+            'name': path_name,
+            'path': path,
+            'disk_total': bytes_humanfriendly(pstats.f_frsize * pstats.f_blocks),
+            'disk_avail': bytes_humanfriendly(pstats.f_frsize * pstats.f_bavail),
+            'used': bytes_humanfriendly(get_recursive_folder_size(path)) if path_name != 'train_data' else '?'
+        })
+    return render_template('admin_storage.html', num_images=num_images, num_human_annotations=num_human_annotations,
+                           path_data=path_data, error=pop_last_error())
+
+
+@admin.route('/admin/worker')
+@requires_admin
+def admin_worker():
     enqueued = db.get_unprocessed_samples()
     models = db.get_models(details=True)
     model_id_to_name = {m['_id']: m['name'] for m in models}
@@ -65,9 +131,8 @@ def admin_page():
         enqueued2.append((model_name, target_name, str(item['_id'])))
     enqueued2 = sorted(enqueued2, key=lambda item: item[0])
     status = [(status_name, db.get_status(status_id)) for status_name, status_id in status_ids]
-    return render_template('admin.html', num_images=num_images, num_human_annotations=num_human_annotations,
-                           datasets=datasets, enqueued=enqueued, status=status, error=pop_last_error(),
-                           models=models, enqueued2=enqueued2)
+    return render_template('admin_worker.html', enqueued=enqueued, status=status, enqueued2=enqueued2, error=pop_last_error())
+
 
 @admin.route('/tag/add', methods=['POST'])
 @requires_admin
@@ -141,3 +206,12 @@ def admin_retrain():
                        dataset_only=dataset_only)
     set_notice('Model training scheduled.')
     return redirect('/model/' + str(rec['_id']))
+
+
+@admin.route('/admin/delete_expired_datasets')
+@requires_admin
+def delete_expired_datasets():
+    ds = find_old_datasets()
+    delete_datasets(ds)
+    set_notice('%d datasets deleted' % len(ds))
+    return redirect('/admin')

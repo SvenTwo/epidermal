@@ -17,6 +17,7 @@
           {% else %}
           <h3>Dataset <strong>{{ dataset_name }}</strong>.</h3>
           <p>Stomata size: {{ image_zoom }}</p>
+          <p>Threshold probability: {{ threshold_prob }} <a href="#" onclick='setDatasetThresholdProb("{{ dataset_id }}", {{ threshold_prob }});'>[ change... ]</a></p>
           {% endif %}
           <div class="col-md-3 float-md-right">
               <div class="dropdown">
@@ -27,7 +28,8 @@
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export">Export results as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_human_positions">Export human annotations as csv</a>
                     <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_machine_positions">Export machine annotations as csv</a>
-                    <a class="dropdown-item" href="/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    <a class="dropdown-item" href="/loading/dataset/{{ dataset_id }}/export_correlation">Export correlation graph</a>
+                    <a class="dropdown-item" href="/loading/dataset/{{ dataset_id }}/export_err_by_threshold">Export error by detection threshold graph</a>
                     {% if not readonly %}
                         {% if (not dataset_user) and (user.email) %}
                             <a class="dropdown-item" href="/claim_dataset/{{ dataset_id }}">Claim dataset</a>
@@ -94,7 +96,6 @@
 
             {% if errored %}
             <div class="col-md-3 mt-2">
-                </ul>
                 <h2>Errored</h2>
                 <ul>
                 {% for item in errored %}
@@ -111,5 +112,5 @@
 {% block tailjs %}
     {{ super() }}
     <script>var dataset_id = "{{ dataset_id }}";</script>
-     <script src="/static/js/dataset.js?v=5"></script>
+     <script src="/static/js/dataset.js?v=6"></script>
 {% endblock %}

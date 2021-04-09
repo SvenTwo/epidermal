@@ -5,14 +5,15 @@ import os
 from config import config
 import csv
 from collections import defaultdict
+import random
 import cv2
 import numpy as np
-from leaves.gen_filelist import split_train_test, save_filelist_shuffled
 import db
 import shutil
 from PIL import Image
 import datetime
 from tqdm import tqdm
+
 
 def load_positions(filename):
     # Load position list formatted as rows with
@@ -23,14 +24,17 @@ def load_positions(filename):
         positions[entry[0]] += [[int(entry[1]), int(entry[2])]]
     return positions
 
+
 def ensure_path_exists(path):
     if not os.path.isdir(path):
         os.makedirs(path)
+
 
 def get_sample_filename(pos, angle, extract_size, output_path, img_name, sample_id=None):
     # Compose filename of sample from source and extraction position and rotation
     return os.path.join(output_path, '%s_%s_%04d_%04d_%03d_%03d_%03d.jpg'
                         % (str(sample_id), img_name, pos[0], pos[1], int(angle), extract_size[0], extract_size[1]))
+
 
 def extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_id=None):
     filename = get_sample_filename(pos, angle, extract_size, output_path, img_name, sample_id=sample_id)
@@ -41,6 +45,7 @@ def extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_
     cv2.imwrite(filename, sample)
     #print 'Extracted sample %s.' % filename
 
+
 def extract_target_positions(img, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Extract all given positions at all angles
     ensure_path_exists(output_path)
@@ -50,6 +55,7 @@ def extract_target_positions(img, allpos, output_path, img_name, angles, extract
             extract_sample(img, pos, angle, output_path, img_name, extract_size, sample_id=sample_id)
             n += 1
     return n
+
 
 def extract_distractor_positions(img, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Extract from positions not close to any given positions at all angles
@@ -83,6 +89,7 @@ def extract_distractor_positions(img, allpos, output_path, img_name, angles, ext
         n += 1
     return n
 
+
 def extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size, sample_id=None):
     # Load image and extract both positive examples from pos as well as negative examples from elsewhere
     # Store images into output_path/target and output_path/distractor
@@ -104,6 +111,7 @@ def extract_positions(img_filename, allpos, output_path, img_name, angles, extra
         raise
     return n
 
+
 def plot_locations(img_filename, allpos, out_filename):
     # Put some red circles around the annotated locations
     # Load image
@@ -113,11 +121,13 @@ def plot_locations(img_filename, allpos, out_filename):
     cv2.imwrite(out_filename, img)
     print 'Wrote annotation to %s.' % out_filename
 
+
 def plot_all_locations(train_path, positions, output_path):
     ensure_path_exists(output_path)
     for img_name, allpos in positions.iteritems():
         img_filename = os.path.join(train_path, img_name + '.jpg')
         plot_locations(img_filename, allpos, os.path.join(output_path, 'targets_' + img_name + '.jpg'))
+
 
 # Iterate over all image files in subfolders of path and put them into the leaves dictionary by family
 # Return number of leaves added
@@ -146,10 +156,12 @@ def generate_filelist_from_folder(filelists, path, img_root, category=None):
         n += 1
     return n
 
+
 def generate_filelist(path, img_root):
     filelists = defaultdict(list)
     n = generate_filelist_from_folder(filelists, path, img_root)
     return filelists
+
 
 def generate_image_patches(train_path, positions, output_path, angles, extract_size):
     n_total = 0
@@ -164,25 +176,28 @@ def generate_image_patches(train_path, positions, output_path, angles, extract_s
         extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size)
     print '%d samples total.' % n_total
 
+
 def archive2dataset():
     extract_size = (256, 256) # wdt, hgt
     n_angles = 8
     angles = np.linspace(0, 360, num=n_angles, endpoint=False)
-    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
+    train_path = os.path.join(config.get_data_path(), 'Pb_stomata_09_03_16_Archive')
     positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
     #plot_all_locations(train_path, positions, os.path.join(data_path, 'epi_targets'))
-    output_path = os.path.join(config.data_path, 'epi1')
+    output_path = os.path.join(config.get_data_path(), 'epi1')
     #generate_image_patches(train_path, positions, output_path, angles, extract_size)
     # Generate dataset text files
-    filelist = generate_filelist(output_path, config.data_path)
+    filelist = generate_filelist(output_path, config.get_data_path())
     class_indices = {'distractor': 0, 'target': 1}
     train, val, test = split_train_test(filelist, n_test=100, n_val=100)
-    save_filelist_shuffled(train, class_indices, os.path.join(config.data_path, 'epi1_train.txt'))
-    save_filelist_shuffled(val, class_indices, os.path.join(config.data_path, 'epi1_val.txt'))
-    save_filelist_shuffled(test, class_indices, os.path.join(config.data_path, 'epi1_test.txt'))
+    save_filelist_shuffled(train, class_indices, os.path.join(config.get_data_path(), 'epi1_train.txt'))
+    save_filelist_shuffled(val, class_indices, os.path.join(config.get_data_path(), 'epi1_val.txt'))
+    save_filelist_shuffled(test, class_indices, os.path.join(config.get_data_path(), 'epi1_test.txt'))
+
 
 def dbpos2extpos(pos):
     return (pos['x'], pos['y'])
+
 
 def db2patches(output_path, train_label=None, sample_limit=None):
     # All human annotations in DB converted to a training set
@@ -197,12 +212,13 @@ def db2patches(output_path, train_label=None, sample_limit=None):
     print 'Extracting patches from %d images to %s...' % (len(annotated_samples), output_path)
     n = 0
     for s in tqdm(annotated_samples):
-        img_filename = os.path.join(config.server_image_path, s['filename'])
+        img_filename = os.path.join(config.get_server_image_path(), s['filename'])
         img_name = s['filename'].replace('.', '_')
         for annotation in db.get_human_annotations(s['_id']):
             allpos = [dbpos2extpos(p) for p in annotation['positions']]
             n += extract_positions(img_filename, allpos, output_path, img_name, angles, extract_size, s['_id'])
     print '%d patches extracted.' % n
+
 
 def patches2filelist(output_path):
     filelist = generate_filelist(output_path, output_path)
@@ -212,12 +228,14 @@ def patches2filelist(output_path):
     save_filelist_shuffled(val, class_indices, os.path.join(output_path, 'val.txt'))
     save_filelist_shuffled(test, class_indices, os.path.join(output_path, 'test.txt'))
 
+
 def gen_new_output_path():
     idtf = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-    output_path = os.path.join(config.train_data_path, 'DS_' + idtf)
+    output_path = os.path.join(config.get_train_data_path(), 'DS_' + idtf)
     while os.path.isdir(output_path): output_path += '_'
     os.makedirs(output_path)
     return output_path
+
 
 def get_karl_dataset_id():
     name = 'Pb_stomata_09_03_16_Archive'
@@ -226,12 +244,14 @@ def get_karl_dataset_id():
         ds = db.add_dataset(name)
     return ds['_id']
 
+
 def pos2db(p):
     return { 'x': p[0], 'y': p[1] }
 
+
 def import_karl_labels():
     dataset_id = get_karl_dataset_id()
-    train_path = os.path.join(config.data_path, 'Pb_stomata_09_03_16_Archive')
+    train_path = os.path.join(config.get_data_path(), 'Pb_stomata_09_03_16_Archive')
     positions = load_positions(os.path.join(train_path, 'VT_stomata_xy_trial_10_15_16.txt'))
     for fn, pos in positions.iteritems():
         pos_db = [pos2db(p) for p in pos]
@@ -239,7 +259,7 @@ def import_karl_labels():
         fn_full = os.path.join(train_path, fnj)
         im = Image.open(fn_full)
         filename = os.path.basename(fnj)
-        fn_target = os.path.join(config.server_image_path, filename)
+        fn_target = os.path.join(config.get_server_image_path(), filename)
         shutil.copyfile(fn_full, fn_target)
         sample = db.add_sample(os.path.basename(fn_target), size=im.size, dataset_id=dataset_id)
         sample_id = sample['_id']
@@ -250,6 +270,61 @@ def import_karl_labels():
     print positions
 
 
-if __name__ == '__main__':
-    #import_karl_labels()
-    retrain()
+# Save filenames and class indices into text file
+def save_filelist_shuffled(leaves, family_indices, save_file, force_overwrite=False):
+    if (not force_overwrite) and os.path.isfile(save_file):
+        print 'Skip existing file %s.' % save_file
+        return
+    leaves_list = leaves_to_list(leaves, family_indices)
+    random.shuffle(leaves_list)
+    with open(save_file, 'wt') as fid:
+        for entry in leaves_list:
+            fid.write('%s %d\n' % (entry[0], int(entry[1])))
+    print '%d entries written to %s.' % (len(leaves_list), save_file)
+
+
+
+# Convert family-indexed dictionary to list of (filename, class_index) pairs
+def leaves_to_list(leaves, family_indices):
+    # Collect list of (name, class_index) pairs
+    # Pre-allocate list
+    n = 0
+    for leaves_f in leaves.itervalues():
+        n += len(leaves_f)
+    leaves_list = [None] * n
+    i = 0
+    # Fill it
+    for family, leaves_f in leaves.iteritems():
+        family_index = family_indices[family]
+        for entry in leaves_f:
+            if ' ' in entry or '?' in entry:
+                print 'WARNING: %s has a space or question mark.' % entry
+            leaves_list[i] = (entry, family_index)
+            i += 1
+    return leaves_list
+
+
+# Split a train and test set
+def split_train_test(leaves, n_test, n_val=0, test_ratio=None, val_ratio=None, test_threshold=None):
+    leaves_train = dict()
+    leaves_val = dict()
+    leaves_test = dict()
+    for family, leaves_f in leaves.iteritems():
+        n = len(leaves_f)
+        if test_ratio is not None:
+            n_test = 0
+            if family != 'unknown':
+                if (test_threshold is None) or (n >= test_threshold):
+                    n_test = int(round(test_ratio*n))
+        if val_ratio is not None:
+            n_val = int(round(val_ratio*n))
+        if n_test + n_val > n:
+            raise RuntimeError('ERROR: Requesting %d+%d test samples from family %s of size %d.' % (n_test, n_val, family, n))
+        test_sample = set(random.sample(xrange(n), n_test))
+        nontest_sample = [i for i in xrange(n) if i not in test_sample]
+        val_sample = set(random.sample(nontest_sample, n_val))
+        train_sample = [i for i in nontest_sample if i not in val_sample]
+        leaves_test[family] = [fn for i,fn in enumerate(leaves_f) if i in test_sample]
+        leaves_val[family] = [fn for i, fn in enumerate(leaves_f) if i in val_sample]
+        leaves_train[family] = [fn for i, fn in enumerate(leaves_f) if i in train_sample]
+    return leaves_train, leaves_val, leaves_test

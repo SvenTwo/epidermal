@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <title>Stomata Counter - Loading {{ target_desc }}</title>
+    <meta http-equiv="refresh" content="0; URL='/{{ target_path }}'" />
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h2>{{ target_desc }}</h2>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <h3>Generating page...</h3>
+    </div> <!-- /container -->
+{% endblock %}
+
+{% block tailjs %}
+    {{ super() }}
+    <!-- <script src="/static/js/foo.js"></script> -->
+{% endblock %}

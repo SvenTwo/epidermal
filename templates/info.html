@@ -59,13 +59,15 @@
         <table id="info_table" class="table table-striped table-bordered" cellspacing="0" width="100%">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Property</th>
                     <th>Value</th>
                 </tr>
             </thead>
             <tbody>
-                {% for k, v in info_table %}
+                {% for kid, k, v in info_table %}
                     <tr>
+                        <td>{{ kid }}</td>
                         <td>{{ k }}</td>
                         <td>{{ v }}</td>
                     </tr>

@@ -3,6 +3,8 @@
 
 import time
 import os
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sys
 import subprocess
@@ -10,10 +12,11 @@ import traceback
 from tqdm import tqdm
 import random
 
-from config import config
-from apply_fcn import load_model_by_record, process_image_file, plot_heatmap
+from config import config, add_config_option
+from apply_fcn_caffe import process_image_file, plot_heatmap, prob_to_fc8
+from apply_fcn import load_model_by_record
 import db
-from stoma_counter import compute_stomata_positions
+from stoma_counter import compute_stomata_positions, default_prob_threshold
 from image_measures import get_image_measures
 
 
@@ -61,7 +64,7 @@ def process_secondary_models(net, model):
 # Process all training and validation images of a model training run
 def process_validation_set(net, net_model, validation_set_model, sample_limit=10000):
     # List images
-    sample_path = os.path.join(config.train_data_path, str(validation_set_model['_id']), 'samples')
+    sample_path = os.path.join(config.get_train_data_path(), str(validation_set_model['_id']), 'samples')
     for subset in 'test', 'train':
         set_status('Processing model %s %s set %s...' % (net_model['name'], subset, validation_set_model['name']))
         imagelist_filename = os.path.join(sample_path, subset + '.txt')
@@ -110,9 +113,14 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         return
     dataset_info = db.get_dataset_by_id(sample['dataset_id'])
     image_zoom_values = default_image_zoom_values.get(dataset_info.get('image_zoom'))
+    threshold_prob_val = dataset_info.get('threshold_prob')
+    if not threshold_prob_val:
+        threshold_prob = default_prob_threshold
+    else:
+        threshold_prob = prob_to_fc8(threshold_prob_val)
     image_filename = sample['filename']
     set_status('Processing %s...' % image_filename, secondary=not is_primary_model)
-    image_filename_full = os.path.join(config.server_image_path, image_filename)
+    image_filename_full = os.path.join(config.get_server_image_path(), image_filename)
     if not os.path.isfile(image_filename_full):
         db.set_sample_error(sample['_id'], 'File does not exist: "%s".' % image_filename_full)
         return
@@ -124,11 +132,11 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
         # Lots of saving and loading here. TODO: Should be optimized to be done all in memory.
         # Determine output file paths
         heatmap_filename = os.path.join(net.name, basename + '_heatmap.npz')
-        heatmap_filename_full = os.path.join(config.server_heatmap_path, heatmap_filename)
+        heatmap_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_filename)
         if not os.path.isdir(os.path.dirname(heatmap_filename_full)):
             os.makedirs(os.path.dirname(heatmap_filename_full))
         heatmap_image_filename = os.path.join(net.name, basename + '_heatmap.jpg')
-        heatmap_image_filename_full = os.path.join(config.server_heatmap_path, heatmap_image_filename)
+        heatmap_image_filename_full = os.path.join(config.get_server_heatmap_path(), heatmap_image_filename)
         # Process image
         data = process_image_file(net, image_filename_full, heatmap_filename_full, scales=image_zoom_values)
         plot_heatmap(image_filename_full, heatmap_filename_full, heatmap_image_filename_full)
@@ -143,7 +151,8 @@ def process_image_sample(net, model_id, sample_id, is_primary_model):
                                                        scale=data['scale'])
         # Count stomata
         heatmap_image = plt.imread(heatmap_image_filename_full)
-        positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False)
+        positions = compute_stomata_positions(machine_annotation, heatmap_image, plot=False,
+                                              prob_threshold=threshold_prob)
         db.update_machine_annotation_positions(sample['_id'], machine_annotation['_id'], positions,
                                                is_primary_model=is_primary_model)
         plt.imsave(heatmap_image_filename_full, heatmap_image)
@@ -202,6 +211,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Epidermal worker process: Finds stomata in images.')
     parser.add_argument('--run', action='store_true', help='Run the actual process. Otherwise, start process as child.')
     parser.add_argument('--secondary', action='store_true', help='Monitor non-primary models.')
+    add_config_option(parser)
 
     args = parser.parse_args()
     if args.run:

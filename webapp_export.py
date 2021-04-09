@@ -16,29 +16,31 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-import io
 import numpy as np
 from math import sqrt
 from itertools import chain
+
 from webapp_samples import info_table_entries
 from webapp_users import get_current_user_id
-from scipy import stats
+from evaluation.eval_threshold import plot_err_by_threshold
+from webapp_plots import get_plot_as_png
 
 
 data_export = Blueprint('data_export', __name__, template_folder='templates')
 
 
 export_fields = (
-    ('Name', 'name'),
-    ('Status', 'status'),
-    ('Dataset', 'dataset_name'),
-    ('Manual_count', 'human_position_count'),
-    ('Automatic_count', 'machine_position_count'),
-    ('Human distance', 'human_distance'),
-    ('Machine distance', 'machine_distance'),
-    ('Machine hopkins', 'machine_hopkins')) + info_table_entries
-export_names = [e[0] for e in export_fields]
-export_keys = [e[1] for e in export_fields]
+    ('image_id', 'name'),
+    ('status', 'status'),
+    ('dataset', 'dataset_name'),
+    ('human_count', 'human_position_count'),
+    ('automatic_count', 'machine_position_count'),
+    ('human_distance', 'human_distance'),
+    ('automatic_distance', 'machine_distance')) + info_table_entries
+# ('Machine hopkins', 'machine_hopkins') - deleted for now
+# Export columns. Karl doesn't want the threshold frequency.
+export_names = [e[0] for e in export_fields if e[1] != 'imq_hf_threshfreq']
+export_keys = [e[1] for e in export_fields if e[1] != 'imq_hf_threshfreq']
 
 
 def export_generator(samples, yield_header=True):
@@ -145,11 +147,19 @@ def dataset_export_correlation(dataset_id_str):
     ax = plt.gca()
     ax.set_ylabel('Human stomata count')
     ax.set_xlabel('Automatic stomata count')
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    plt.close()
-    return Response(buf, mimetype="image/png")
+    return Response(get_plot_as_png(), mimetype="image/png")
+
+
+@data_export.route('/dataset/<dataset_id_str>/export_err_by_threshold')
+def dataset_export_err_by_threshold(dataset_id_str):
+    try:
+        dataset_id = ObjectId(dataset_id_str)
+        model = db.get_primary_model()
+        plot_err_by_threshold(model=model, dataset_ids=[dataset_id])
+        return Response(get_plot_as_png(), mimetype="image/png")
+    except IOError:
+        return render_template("error.html", error_text='Missing data file due to migration. '
+                                                        'Re-process dataset to produce the graph.')
 
 
 @data_export.route('/export_all')

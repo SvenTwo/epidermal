@@ -34,7 +34,7 @@ model_to_friendly_name = {
 
 
 def savefig(name):
-    pth = os.path.join(config.plot_path, name + '.pdf')
+    pth = os.path.join(config.get_plot_path(), name + '.pdf')
     plt.gcf().savefig(pth, bbox_inches='tight')
 
 

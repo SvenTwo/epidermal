@@ -11,34 +11,52 @@
        <div class="col-xs-12" style="height:50px;"></div>
         <div class="col-md-8 border border-primary bg-light">
             <form action="/dataset/new" method=post enctype=multipart/form-data id="upload_image_form">
-                <h2>1. Select stomata size</h2>
+                <h2>1. Configure</h2>
                 <p>Click the size button that corresponds most closely to the <strong>size of the stomata</strong> when your image is viewed at 100% zoom.</p>
-                    <div class="form-group">
-        <div class="col-sm-8 text-center">
+                <div class="form-group">
+                    <div class="col-sm-8 text-center">
+                        <input type="radio" name="size" id="sizeDefault" value="default" class="input-hidden" checked>
+                            <label class="radio-inline sizesamplelabel" for="sizeDefault">
+                                <img src="/static/simg/size_default.jpg" class="sizesampleimg" alt="Default stomata size (100px to 200px)" />
+                                <p class="text-center sizesampletext">Default<br />(100px&nbsp;to&nbsp;200px)</p>
+                            </label>
+                        </input>
+                        <input type="radio" name="size" id="sizeSmall" value="small" class="input-hidden">
+                            <label class="radio-inline sizesamplelabel" for="sizeSmall">
+                                <img src="/static/simg/size_small.jpg" class="sizesampleimg" alt="Small (50px&nbsp;to&nbsp;100px)" />
+                                <p class="text-center sizesampletext">Small<br />(50px&nbsp;to&nbsp;100px)</p>
+                            </label>
+                        </input>
+                        <input type="radio" name="size" id="sizeTiny" value="tiny" class="input-hidden">
+                            <label class="radio-inline sizesamplelabel" for="sizeTiny">
+                                <img src="/static/simg/size_tiny.jpg" class="sizesampleimg" alt="Tiny (25px&nbsp;to&nbsp;50px)" />
+                                <p class="text-center sizesampletext">Tiny<br />(25px&nbsp;to&nbsp;50px)</p>
+                            </label>
+                        </input>
+                    </div>
+                    <h3>Detection threshold</h3>
+                    <p>Threshold probability: <input type="number" min="0.5" max="1.0" step="0.01" name="threshold" value="{{ threshold_prob }}"/>
+                        (leave to default of {{ threshold_prob_short }} if you don't know which value to set).
+                    </p>
+                    <h3>Contribution</h3>
+                    <div class="form-check">
+                        <p>
+                            <input type="checkbox" class="reuse-checkbox" id="reuseCheck" name="reuseCheck" />
+                            <label class="form-check-label" for="reuseCheck">
+                                Help us improve performance by allowing these images to be used for fine-tuning the StomataCounter model.
+                                See <a href="/about">About page</a> for details.
+                            </label>
+                        </p>
+                    </div>
+                </div>
+                <div class="form-group">
 
-            <input type="radio" name="size" id="sizeDefault" value="default" class="input-hidden" checked>
-                <label class="radio-inline sizesamplelabel" for="sizeDefault">
-                    <img src="/static/simg/size_default.jpg" class="sizesampleimg" alt="Default stomata size (100px to 200px)" />
-                    <p class="text-center sizesampletext">Default<br />(100px&nbsp;to&nbsp;200px)</p>
-                </label>
-            </input>
-            <input type="radio" name="size" id="sizeSmall" value="small" class="input-hidden">
-                <label class="radio-inline sizesamplelabel" for="sizeSmall">
-                    <img src="/static/simg/size_small.jpg" class="sizesampleimg" alt="Small (50px&nbsp;to&nbsp;100px)" />
-                    <p class="text-center sizesampletext">Small<br />(50px&nbsp;to&nbsp;100px)</p>
-                </label>
-            </input>
-            <input type="radio" name="size" id="sizeTiny" value="tiny" class="input-hidden">
-                <label class="radio-inline sizesamplelabel" for="sizeTiny">
-                    <img src="/static/simg/size_tiny.jpg" class="sizesampleimg" alt="Tiny (25px&nbsp;to&nbsp;50px)" />
-                    <p class="text-center sizesampletext">Tiny<br />(25px&nbsp;to&nbsp;50px)</p>
-                </label>
-            </input>
-        </div>
-    </div>
-                <h2>2. Upload file (zip or image)</h2>
-                <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. For normal stomata size, the minimum image size is 256x256 and the maximum is 4096x4096. Images between 1000x1000 and 2000x2000 work the best. For stomata size setting "small", the maximum image size is 2048x208. For "tiny", it's 1024x1024.</p>
-                <p><input type=file name=file id="upload_image" class="btn btn-primary btn-lg btn-block"></p>
+                </div>
+                <div>
+                    <h2>2. Upload file (zip or image)</h2>
+                    <p>Select a file to upload. Either .png, .jpg, .jpeg for images, or .zip files containing images. For normal stomata size, the minimum image size is 256x256 and the maximum is 4096x4096. Images between 1000x1000 and 2000x2000 work the best. For stomata size setting "small", the maximum image size is 2048x208. For "tiny", it's 1024x1024.</p>
+                    <p><input type=file name=file id="upload_image" class="btn btn-primary btn-lg btn-block"></p>
+                </div>
             </form>
         </div>
        <div class="col-xs-12" style="height:50px;"></div>
@@ -159,6 +177,21 @@
                     <li>Reduce noise in your micrographs. The goal is to upload images where even an infant botanist could pick out a stoma!</li>
                     <li>View examples in the examples tab to get an idea for what works.</li>
                 </ul>
+    <h2>Output</h2>
+            <p>The output file contains information about the sample and data set names, manual stomata counts (if annotations are made by the user), automatic counts from StomataCounter, and image quality scores.</p>
+        <h3>Image quality</h3>
+            <p>As one may predict, image quality has a large influence on detection results. Users are encouraged to try several imaging techniques to discover which microscopy or tissue preparation method works best for their material. We have found that z-stacked DIC micrographs perform the best for nail polish peels.</p>
+            <p>Image quality scores from <a href="https://bitbucket.org/sakoho81/pyimagequalityranking/wiki/CLI">PyImq</a> are provided in the output file for users to filter their own images with. Image quality scores are provided without standardization, and users should standardize values between zero and one to match Fetter et al. (2019) and Koho et al. (2016). PyImq scores include:</p>
+                <ul>
+                    <li><strong>tEntropy</strong>: Shannon's spatial domain entropy. High values indicate high contrast/noisy images.</li>
+                    <li><strong>fMean</strong>: average value of the tail of the power-frequency distribution amplitude. Low values indicate a blurry image.</li>
+                    <li><strong>fSTD</strong>: standard deviation of power-frequency distribution tail. Low values indicate a blurry image. </li>
+                    <li><strong>fEntropy</strong>: entropy of the tail of the power-frequency distribution</li>
+                    <li><strong>fPower</strong>: the highest frequency power accumulation</li>
+                    <li><strong>fSkewness</strong>: power-frequency distribution skewness</li>
+                    <li><strong>fKurtosis</strong>: power-frequency distribution kurtosis</li>
+                </ul>
+            <p>See <a href="https://www.nature.com/articles/srep28962">Koho et al. (2016)</a> for complete descriptions of the image quality scores.</p>
 		</div>
     </div>
     <div class="container">

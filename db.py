@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Image sample database. DB is connected on module import
 
+import os
 import numpy as np
 import pymongo
 from config import config
@@ -9,7 +10,7 @@ from datetime import datetime
 
 
 client = pymongo.MongoClient(host=config.db_address, port=config.db_port)
-epidermal_db = client.epidermal
+epidermal_db = client[config.db_name]
 
 
 # Datasets #
@@ -31,6 +32,10 @@ def get_dataset_info(s):
 
 def get_datasets_by_tag(tag_name):
     return datasets.find({'tags': {'$in': [tag_name]}, 'deleted': False})
+
+
+def get_untagged_old_datasets(threshold_date):
+    return datasets.find({'tags': [], 'date_accessed': {"$lt": threshold_date}})
 
 
 def get_datasets(deleted=False):
@@ -61,39 +66,65 @@ def is_readonly_dataset_id(dataset_id):
     return is_readonly_dataset(get_dataset_by_id(dataset_id))
 
 
-def add_dataset(name, user_id=None, image_zoom=None):
+def add_dataset(name, user_id=None, image_zoom=None, threshold_prob=None):
     dataset_record = {'name': name, 'deleted': False, 'date_added': datetime.now(), 'tags': [], 'user_id': user_id,
-                      'image_zoom': image_zoom}
+                      'image_zoom': image_zoom, 'threshold_prob': threshold_prob, 'date_accessed': datetime.now()}
     dataset_record['_id'] = datasets.insert_one(dataset_record).inserted_id
     return dataset_record
 
 
-def delete_dataset(dataset_id):
-    datasets.update({'_id': dataset_id}, {"$set": {'deleted': True}}, upsert=False)
+def access_dataset(dataset_id):
+    datasets.update_one({'_id': dataset_id}, {"$set": {'date_accessed': datetime.now()}}, upsert=False)
+
+
+def delete_dataset(dataset_id, recycle=True, delete_files=False):
+    if recycle:
+        access_dataset(dataset_id)
+        datasets.update({'_id': dataset_id}, {"$set": {'deleted': True}}, upsert=False)
+    else:
+        for sample in samples.find({'dataset_id': dataset_id}):
+            delete_sample(sample['_id'], delete_files=delete_files, do_access_dataset=False)
+        datasets.delete_one({'_id': dataset_id})
 
 
 def update_dataset_human_annotations(dataset_id):
     annotated_count = samples.count({'dataset_id': dataset_id, 'human_position_count': {'$gt': 0}})
-    datasets.update({'_id': dataset_id}, {"$set": {'human_annotation_count': annotated_count}}, upsert=False)
+    datasets.update({'_id': dataset_id}, {"$set": {'human_annotation_count': annotated_count,
+                                                   'date_accessed': datetime.now()}}, upsert=False)
 
 
 def add_dataset_tag(dataset_id, new_tag):
-    datasets.update({'_id': dataset_id}, {"$push": {'tags': new_tag}}, upsert=False)
+    datasets.update({'_id': dataset_id}, {"$addToSet": {'tags': new_tag}}, upsert=False)
+    access_dataset(dataset_id)
 
 
 def remove_dataset_tag(dataset_id, tag_name):
     datasets.update({'_id': dataset_id}, {"$pull": {'tags': tag_name}}, upsert=False)
+    access_dataset(dataset_id)
 
 
 def set_dataset_user(dataset_id, user_id):
     datasets.update({'_id': dataset_id}, {"$set": {'user_id': user_id}}, upsert=False)
+    access_dataset(dataset_id)
+
+
+def set_dataset_threshold_prob(dataset_id, new_threshold_prob):
+    datasets.update({'_id': dataset_id}, {"$set": {'threshold_prob': new_threshold_prob}}, upsert=False)
+    access_dataset(dataset_id)
 
 
 # Fix dataset date added where it's missing
 def fix_dataset_date_added():
     for d in datasets.find({'date_added': None}):
         print 'Updating ', d
-        datasets.update({'_id': d['_id']}, {"$set": {'date_added': datetime.now()}}, upsert=False)
+        datasets.update({'_id': d['_id']}, {"$set": {'date_added': datetime.now(),
+                                                     'date_accessed': datetime.now()}}, upsert=False)
+
+
+def fix_dataset_date_accessed():
+    for d in datasets.find({'date_accessed': None}):
+        print 'Updating ', d
+        datasets.update({'_id': d['_id']}, {"$set": {'date_accessed': datetime.now()}}, upsert=False)
 
 
 # Fix dataset human annotation count where it's missing
@@ -106,7 +137,7 @@ def fix_dataset_human_annotation_count():
 # Fix datasets to have an empty tag array
 def fix_dataset_tags():
     for d in datasets.find({'tags': None}):
-        datasets.update({'_id': d['_id']}, {"$set": {'tags': []}}, upsert=False)
+        datasets.update({'_id': d['_id']}, {"$set": {'tags': [], 'date_accessed': datetime.now()}}, upsert=False)
 
 
 # Samples #
@@ -203,6 +234,7 @@ def add_sample(name, filename, size, dataset_id=None):
     sample_record = {'name': name, 'filename': filename, 'dataset_id': dataset_id, 'size': size, 'processed': False,
                      'annotated': False, 'error': False, 'error_string': None, 'date_added': datetime.now()}
     sample_record['_id'] = samples.insert_one(sample_record).inserted_id
+    access_dataset(dataset_id)
     return sample_record
 
 
@@ -219,9 +251,29 @@ def get_sample_by_id(sample_id):
     return samples.find_one({'_id': sample_id})
 
 
-def delete_sample(sample_id):
-    r = samples.delete_one({'_id': sample_id})
-    return r.deleted_count == 1
+def delete_sample(sample_id, delete_files=False, do_access_dataset=True):
+    sample = samples.find_one_and_delete({'_id': sample_id})
+    if sample is None:
+        return False
+    # Also delete files.
+    if delete_files:
+        image_filename = sample['filename']
+        image_filename_base = os.path.splitext(image_filename)[0]
+        image_filename_full = os.path.join(config.get_server_image_path(), image_filename)
+        heatmap_filename = os.path.join(config.get_server_heatmap_path(), 'alexnetftc_5000',
+                                        image_filename_base + '_heatmap.jpg')
+        heatmap_data_filename = os.path.join(config.get_server_heatmap_path(), 'alexnetftc_5000',
+                                             image_filename_base + '_heatmap.npz')
+        for fn in image_filename_full, heatmap_filename, heatmap_data_filename:
+            try:
+                os.remove(fn)
+                print 'Deleted', fn
+            except OSError:
+                print 'Error deleting', fn
+    # Mark dataset as accessed
+    if do_access_dataset:
+        access_dataset(sample['dataset_id'])
+    return True
 
 
 def get_sample_count():
@@ -342,13 +394,14 @@ def set_human_annotation(sample_id, user_id, positions, margin, base_annotations
     annotation_record = {'sample_id': sample_id, 'user_id': user_id, 'positions': positions, 'margin': margin,
                          'base_annotations': base_annotations}
     human_annotations.update(annotation_lookup, annotation_record, upsert=True)
-    samples.update({'_id': sample_id}, {"$set": {'annotated': True}}, upsert=False)
-    samples.update({'_id': sample_id}, {"$set": {'human_position_count': len(positions)}}, upsert=False)
-    sample = samples.find_one({'_id': sample_id})
+    sample = samples.find_one_and_update({'_id': sample_id},
+                                         {"$set": {'annotated': True, 'human_position_count': len(positions)}},
+                                         upsert=False)
     if sample is not None:
         dataset_id = sample['dataset_id']
         if dataset_id is not None:
             update_dataset_human_annotations(dataset_id)
+            add_dataset_tag(dataset_id, 'has_annotations')
 
 
 def get_human_annotation_count():
@@ -408,6 +461,7 @@ def remove_machine_annotations_for_dataset(dataset_id):
                          'error': False,
                          'error_string': None}
         samples.update_one({'_id': sample['_id']}, {"$set": sample_update}, upsert=False)
+    access_dataset(dataset_id)
     return c
 
 
@@ -613,7 +667,8 @@ def print_annotation_table():
 
 # Test
 if __name__ == '__main__':
-    fix_primary_machine_annotations()
+    fix_dataset_date_accessed()
+    #fix_primary_machine_annotations()
     #delete_all_machine_annotations()
     #for dataset in get_datasets():
     #    if dataset.get('user'):

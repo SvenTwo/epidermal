@@ -12,7 +12,7 @@ from PIL import Image
 from webapp_base import error_redirect, set_error, set_notice
 
 # Upload
-def upload_file(dataset_id, image_zoom=None):
+def upload_file(dataset_id, image_zoom=None, threshold_prob=None, allow_reuse=False):
     # check if the post request has the file part
     if 'file' not in request.files: return error_redirect('No file.')
     file = request.files['file']
@@ -24,7 +24,10 @@ def upload_file(dataset_id, image_zoom=None):
     # Generate dataset if needed
     is_new_dataset = (dataset_id is None)
     if is_new_dataset:
-        dataset_id = db.add_dataset(name=filename, user_id=get_current_user_id(), image_zoom=image_zoom)['_id']
+        dataset_id = db.add_dataset(name=filename, user_id=get_current_user_id(), image_zoom=image_zoom,
+                                    threshold_prob=threshold_prob)['_id']
+    if allow_reuse:
+        db.add_dataset_tag(dataset_id, 'reuse')
     # Handle according to type
     if ext in config.archive_extensions:
         return upload_archive(dataset_id, file, filename, is_new_dataset=is_new_dataset)
@@ -39,11 +42,13 @@ def make_unique_server_image_filename(filename):
     filename = basename + ext
     i = 1
     while True:
-        full_fn = os.path.join(config.server_image_path, filename)
+        full_fn = os.path.join(config.get_server_image_path(), filename)
         if not os.path.isfile(full_fn):
             break
         filename = '%s-%03d%s' % (basename, i, ext)
         i += 1
+    if i > 1:
+        print 'File renamed to be unique:', filename
     return full_fn
 
 
