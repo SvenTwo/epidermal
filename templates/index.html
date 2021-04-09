@@ -24,21 +24,13 @@
     <div class="container">
     	<div class="col-md-8">
             <h2>Welcome to StomataCounter!</h2>
-                <p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. You can read about how StomataCounter was developed and the tests we performed to validate StomataCounter's effectiveness in the <a href="https://doi.org/10.1101/327494">preprint</a>. We recommend you register an account with us so that you can return to your jobs after you leave the website.</p>
+                <p>StomataCounter is a tool to work with plant epidermal micrographs to phenotype stomatal density. Supporting this method is a convolutional neural network trained about about 4,700 micrographs from 700 species of plants. You can read about how StomataCounter was developed and the tests we performed to validate StomataCounter's effectiveness in the <a href="https://doi.org/10.1111/nph.15892">New Phytologist manuscript</a>. We recommend you register an account with us so that you can return to your jobs after you leave the website.</p>
             <h3>Instructions for using this site</h3>
                 <p>The simplest way to use StomataCounter is to upload a jpeg using the upload button below, refresh your browser on the Dataset page after a few moments, then export the results using the Dataset operations pulldown menu.</p>
                 <p>Most users will have several hundred images to measure and uploading zip files of jpegs is more convencient. You can add more zipfiles or individual images to a dataset by navigating to that dataset's page and following the instructions to add more images. Once StomataCounter has finished detecting and counting stomata, you should view the results of all or a set of images to determine how well the method performed. Click on an image to view the result. You should annotate 50 or 100 images (or whatever number you're comfortable with) and view the correlation of human to automatic stomata counts. This is done by clicking on the Dataset operations drop down menu and selecting "Export correlation graph".</p>
                 <p>Stomata annotations are added to an image by clicking on image in a dataset and clicking the annotate button. There are two annotation modes. Enter the basic annotation mode by clicking "Annotate" in the list of actions. In this mode, you'll have to add an annotation for each stomata by clicking once to add, and twice to remove. We provided a faster method of annotating using the "Annotate from automatic" annotation mode. In this mode, StomataCounter's best quess of where a stoma is located is provided as an annotation. You then choose to accept, reject, or modify annotations. The automatic annotation mode is a great time saver and you'll only spend a few seconds annotating each image.</p>
                 <p>When you are ready to download and analyze your output data, click on the "Export results as csv" in the Dataset operations drop down menu. Along with the results visible in the dataset table, each image is scored for nine image quality scores. These quality scores are very informative and can be helpful for you to filter results from low quality images. You should read more about these quality scores from PyImq in their original <a href="http://dx.doi.org/10.1038/srep28962">publication.</a></p>
         </div>
-   <div class="container">
-       <div class="col-xs-12" style="height:50px;"></div>
-        <div class="col-md-8">
-            <form action="/upload" method=get>
-                <button type="submit" class="btn btn-primary btn-lg btn-block">Try it - click here to upload images!</button>
-            </form>
-        </div>
-    </div> <!-- /container -->
     <div class="container">
         {{ super() }}
     </div>
