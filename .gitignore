@@ -100,3 +100,4 @@ cnn/out
 cnn/
 *.zip
 /model
+output/
