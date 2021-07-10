@@ -31,8 +31,8 @@ output:
     patterns:
       - csv
       - jpg
-resources:
-  time: "04:00:00"
-  mem: "5GB"
+jobqueue:
+  walltime: "04:00:00"
+  memory: "5GB"
   processes: 1
   cores: 12
