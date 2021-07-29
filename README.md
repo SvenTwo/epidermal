@@ -23,7 +23,7 @@ pyIMQ for image quality measures is also required and can be found here: https:/
 
 If you prefer to not use the web service, a script can be used for batch processing locally. It can be used to input a set of images and output CSV file with stomata counts, and optionally create heatmaps of each processed image.
 
-Download the pre-trained model weights from here [[Download]](https://drive.google.com/open?id=1StStt1aiN8q1rvSnSVY--87CQ8Z4Pf9b) and unzip the two files (sc_feb2019.caffemodel and sc_feb2019.prototxt). 
+Download the most current pre-trained model weights from here [[Download]](https://drive.google.com/file/d/18qirGnLD3oEpInyp1KAVf9ZsKf_MQkRb/view?usp=sharing) (alexnetftc_iter_5000_fcn.caffemodel and sc_feb2019.prototxt), or the published model weights here [[Download]](https://drive.google.com/open?id=1StStt1aiN8q1rvSnSVY--87CQ8Z4Pf9b) (sc_feb2019.caffemodel and sc_feb2019.prototxt) and unzip the two files. 
 
 The processing command allows tweaking various settings such as the input scale and detection threshold. The interface is:
 
