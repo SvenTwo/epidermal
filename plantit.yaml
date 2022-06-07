@@ -5,7 +5,7 @@ clone: False
 doi: 10.1111/nph.15892
 logo: stomata.jpg
 image: docker://wbonelli/epidermal
-commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/sc_feb2019.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $INPUT)/output.csv --heatmap-output-path $(dirname $INPUT) --scale $SCALE --prob-threshold $THRESHOLD $(find $INPUT -type f | tr "\n" " ")
+commands: python /opt/epidermal/process_images.py --weights-filename /opt/epidermal/model/alexnetftc_iter_5000_fcn.caffemodel --proto-filename /opt/epidermal/model/sc_feb2019.prototxt --csv-output-filename $(dirname $INPUT)/output.csv --heatmap-output-path $(dirname $INPUT) --scale $SCALE --prob-threshold $THRESHOLD $(find $INPUT -type f | tr "\n" " ")
 params:
   - name: scale
     type: number
@@ -31,8 +31,8 @@ output:
     patterns:
       - csv
       - jpg
-resources:
-  time: "02:00:00"
-  mem: "5GB"
+jobqueue:
+  walltime: "04:00:00"
+  memory: "5GB"
   processes: 1
-  cores: 1
+  cores: 12
